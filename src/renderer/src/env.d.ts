@@ -6,3 +6,14 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+export interface IElectronAPI {
+  windowClose: () => Promise<void>
+  windowMini: () => Promise<void>
+}
+
+declare global {
+  interface Window {
+    electronAPI: IElectronAPI
+  }
+}

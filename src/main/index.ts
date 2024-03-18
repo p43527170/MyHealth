@@ -7,14 +7,28 @@ function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 480,
-    height: 420,
+    height: 400,
     show: false,
+    useContentSize: true,
     autoHideMenuBar: true,
+    frame: false,
+    maximizable: false, // 可否最大化
+    resizable: process.platform === 'darwin', //禁止调整大小
+    fullscreen: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
+  })
+
+  //登录窗口最小化 
+  ipcMain.on('window-min', function () {
+    mainWindow.minimize();
+  })
+  //登录窗口关闭
+  ipcMain.on('window-close', function () {
+    mainWindow.close();
   })
 
   mainWindow.on('ready-to-show', () => {
