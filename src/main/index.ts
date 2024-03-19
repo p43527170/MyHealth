@@ -10,6 +10,10 @@ function createWindow(): void {
     height: 420,
     show: false,
     autoHideMenuBar: true,
+    resizable: false,
+    frame: false,
+    maximizable: false,
+    titleBarStyle: 'hidden',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -24,6 +28,15 @@ function createWindow(): void {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
+  })
+
+  //窗口最小化
+  ipcMain.on('minimize', () => {
+    mainWindow.minimize()
+  })
+  //窗口关闭方法
+  ipcMain.on('close', () => {
+    mainWindow.close()
   })
 
   // HMR for renderer base on electron-vite cli.
