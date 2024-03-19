@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+console.log(electronAPI)
 
-// Custom APIs for renderer
 const api = {}
 
 // Use `contextBridge` APIs to expose Electron APIs to
@@ -11,12 +11,13 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld('electronAPI', {
-      windowMini: () => {
-        ipcRenderer.send('window-min')
+    //contextBridge.exposeInMainWorld通信最小化方法
+    contextBridge.exposeInMainWorld('electronApi', {
+      minimize: () => {
+        ipcRenderer.send('minimize');
       },
-      windowClose: () => {
-        ipcRenderer.send('window-close')
+      close: () => {
+        ipcRenderer.send('close');
       }
     })
   } catch (error) {
