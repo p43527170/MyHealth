@@ -2,19 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 console.log(electronAPI)
 
-// // 获取窗口的宽高
-// const windowSize = currentWindow.getSize();
-// const width = windowSize[0];
-// const height = windowSize[1];
-
-// console.log(`Window Width: ${width}px, Window Height: ${height}px`);
-
-// const contentSize = currentWindow.getContentSize();
-// const contentWidth = contentSize[0];
-// const contentHeight = contentSize[1];
-
-// console.log(`Window Content Width: ${contentWidth}px, Window Content Height: ${contentHeight}px`);
-// Custom APIs for renderer
 const api = {}
 
 // Use `contextBridge` APIs to expose Electron APIs to

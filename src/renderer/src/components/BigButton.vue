@@ -34,8 +34,44 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, toRefs } from 'vue'
 
+interface ilocalData{
+  localData: {
+    icon: {
+      value: string
+    },
+    title: {
+      value: string
+    },
+    mode: {
+      value: string
+    },
+    voice: {
+      value: string
+    },
+    strength: {
+      value: string
+    },
+    switch: {
+      value: boolean
+    },
+    other: {
+      value: boolean
+    },
+    allocation: {
+      value: string
+    },
+    startup: {
+      value: string
+    }
+  }
+}
 const props = defineProps({
-  buttonData: Object
+  buttonData: {
+    type: Object,
+    default: () => {
+      return {}
+    }
+  }
 })
 const localData = toRefs(props.buttonData)
 
