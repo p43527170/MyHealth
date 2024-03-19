@@ -1,20 +1,21 @@
 <template>
   <div v-if="!!localData && !!localData.icon" class="button" @click="clickRouter">
     <div class="title">
-      <img :src="localData.icon.value" alt="" />
+      <img :src="localData.icon.value as unknown as string" alt="" />
       <span>{{ localData.title.value }}</span>
     </div>
     <div v-if="!localData.other.value" class="content">
       <p>
-        模式：<span>{{ localData.mode.value }}</span>
+        模式：<span>{{ localData.mode?.value }}</span>
       </p>
       <p>
-        声音：<span>{{ localData.voice.value }}</span>
+        声音：<span>{{ localData.voice?.value }}</span>
       </p>
       <p>
-        强度：<span>{{ localData.strength.value }}</span>
+        强度：<span>{{ localData.strength?.value }}</span>
       </p>
-      <el-switch 
+      <el-switch
+        v-if="localData.switch"
         v-model="localData.switch.value"
         style="--el-switch-on-color: #ff9bc4"
         @change="clickHandle"
@@ -22,57 +23,33 @@
     </div>
     <div v-if="localData.other.value" class="content">
       <p>
-        已配置：<span>{{ localData.allocation.value }}</span>
+        已配置：<span>{{ localData.allocation?.value }}</span>
       </p>
       <p>
-        已启用：<span>{{ localData.startup.value }}</span>
+        已启用：<span>{{ localData.startup?.value }}</span>
       </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, toRefs } from 'vue'
+import { toRefs } from 'vue'
 
-interface ilocalData{
-  localData: {
-    icon: {
-      value: string
-    },
-    title: {
-      value: string
-    },
-    mode: {
-      value: string
-    },
-    voice: {
-      value: string
-    },
-    strength: {
-      value: string
-    },
-    switch: {
-      value: boolean
-    },
-    other: {
-      value: boolean
-    },
-    allocation: {
-      value: string
-    },
-    startup: {
-      value: string
-    }
+interface Iprops {
+  buttonData: {
+    icon: string
+    title: string
+    url: string
+    other: boolean
+    mode?: string
+    voice?: string
+    strength?: string
+    switch?: boolean
+    allocation?: number
+    startup?: number
   }
 }
-const props = defineProps({
-  buttonData: {
-    type: Object,
-    default: () => {
-      return {}
-    }
-  }
-})
+const props = defineProps<Iprops>()
 const localData = toRefs(props.buttonData)
 
 const emits = defineEmits(['clickSwitch'])

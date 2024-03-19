@@ -7,7 +7,7 @@ declare module '*.vue' {
   export default component
 }
 
-export interface IElectronAPI  {
+export interface IElectronAPI {
   minimize: () => void
   close: () => void
 }
@@ -15,6 +15,6 @@ export interface IElectronAPI  {
 //全局
 declare global {
   interface Window {
-    electronApi: IElectronAPI 
+    electronApi: IElectronAPI
   }
 }

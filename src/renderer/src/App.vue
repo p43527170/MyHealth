@@ -15,7 +15,7 @@ const buttonData = ref([
     url: 'https://www.baidu.com',
     switch: true,
     icon: yanjing,
-    other:false
+    other: false
   },
   {
     title: '久坐提醒',
@@ -25,7 +25,7 @@ const buttonData = ref([
     url: 'https://www.baidu.com',
     switch: true,
     icon: jiuzuo,
-    other:false
+    other: false
   },
   {
     title: '喝水提醒',
@@ -35,7 +35,7 @@ const buttonData = ref([
     url: 'https://www.baidu.com',
     switch: false,
     icon: heshui,
-    other:false
+    other: false
   },
   {
     title: '自定义提醒',
@@ -43,7 +43,7 @@ const buttonData = ref([
     startup: 0,
     url: 'https://www.baidu.com',
     icon: qita,
-    other:true
+    other: true
   }
 ])
 
@@ -98,7 +98,7 @@ const clickSwitch = (index) => {
 .container {
   width: 100%;
   justify-content: space-evenly;
-  height: 420px;
+  height: 400px;
   display: flex;
   flex-wrap: wrap;
 
