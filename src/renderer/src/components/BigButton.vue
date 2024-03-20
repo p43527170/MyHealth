@@ -1,26 +1,24 @@
 <template>
   <div v-if="!!localData && !!localData.icon" class="button" @click="clickRouter">
     <div class="title">
-      <img :src="localData.icon.value as unknown as string" alt="" />
+      <div class="image">
+        <img :src="localData.icon.value as unknown as string" alt="" />
+      </div>
       <span>{{ localData.title.value }}</span>
     </div>
     <div v-if="!localData.other.value" class="content">
       <p>
-        模式：<span>{{ localData.mode?.value }}</span>
+        模式：<span>{{ mode[localData.modeValue?.value].title }}</span>
       </p>
       <p>
-        声音：<span>{{ localData.voice?.value }}</span>
+        声音：<span>{{ localData.voiceValue?.value ? voice[1] : voice[0] }}</span>
       </p>
-      <p>
-        强度：<span>{{ localData.strength?.value }}</span>
+      <p v-if="localData.strengthValue?.value != undefined">
+        强度：<span>{{ strength[localData.strengthValue.value] }}</span>
       </p>
-      <div @click="toggleSwitch">
-        <el-switch
-          v-if="localData.switch"
-          v-model="localData.switch.value"
-          style="--el-switch-on-color: #ff9bc4"
-          @change="clickHandle"
-        />
+      <div style="width: fit-content" @click="toggleSwitch">
+        <el-switch v-if="localData.switch" v-model="localData.switch.value" style="--el-switch-on-color: #ff9bc4"
+          @change="clickHandle" />
       </div>
     </div>
     <div v-if="localData.other.value" class="content">
@@ -37,30 +35,34 @@
 <script setup lang="ts">
 import { toRefs } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDataStore } from '../store/dataStore'
+const dataStore = useDataStore()
 const router = useRouter()
 
 interface Iprops {
   buttonData: {
-    icon: string
     title: string
     url: string
+    icon: string
     other: boolean
-    mode?: string
-    voice?: string
-    strength?: string
     switch?: boolean
-    allocation?: number
-    startup?: number
+    modeValue?: number
+    voiceValue?: boolean
+    strengthValue?: number
+    [key: string]: string | number | boolean | object | undefined
   }
+  index: number
 }
 const props = defineProps<Iprops>()
 const localData = toRefs(props.buttonData)
+const dataIndex = props.index
+const mode = dataStore.reminderSettings[localData.url.value]
+const strength = dataStore.strength
+const voice = dataStore.voice
 
-const emits = defineEmits(['clickSwitch'])
-
-//点击clickSwitch向父组件传参
-const clickHandle = (value) => {
-  emits('clickSwitch', value)
+//点击clickSwitch更新参数
+const clickHandle = (value: boolean) => {
+  dataStore.updateSwitch(dataIndex, value)
 }
 function toggleSwitch(event) {
   // 阻止事件冒泡到父元素，避免触发页面跳转
@@ -71,7 +73,8 @@ const clickRouter = () => {
   router.push({
     name: 'ReminderSettings',
     query: {
-      id: localData.url.value
+      name: localData.url.value,
+      dataIndex: dataIndex
     }
   })
 }
@@ -80,7 +83,9 @@ const clickRouter = () => {
 <style scoped lang="scss">
 .button {
   //背景色渐变半透明
-  background: linear-gradient(135deg, rgba(70, 71, 88, 0.5) 0%, rgba(79, 85, 99, 0.6) 100%);
+  background: linear-gradient(135deg,
+      rgba(70, 71, 88, 0.5) 0%,
+      rgba(79, 85, 99, 0.6) 100%);
   border-radius: 8px;
   box-sizing: border-box;
   width: 100%;
@@ -90,7 +95,9 @@ const clickRouter = () => {
   transition: background 0.24s ease;
 
   &:hover {
-    background: linear-gradient(135deg, rgba(70, 71, 88, 0.6) 0%, rgba(79, 85, 99, 0.7) 100%);
+    background: linear-gradient(135deg,
+        rgba(70, 71, 88, 0.6) 0%,
+        rgba(79, 85, 99, 0.7) 100%);
   }
 
   .title {
@@ -99,13 +106,18 @@ const clickRouter = () => {
 
     // border-bottom: 1px solid #515158;
     // justify-content: center;
-    img {
+    .image {
       width: 26px;
       height: 26px;
       margin-right: 8px;
       background-color: #ffffff;
       border-radius: 50%;
-      padding: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 3px;
+      img {
+        width: 100%;
+      }
     }
 
     span {

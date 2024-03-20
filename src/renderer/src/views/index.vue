@@ -1,7 +1,11 @@
 <template>
   <article class="content">
-    <section v-for="(item, index) in dataStore.buttonData" :key="index" class="button-ctn">
-      <BigButton :button-data="item" @click-switch="clickSwitch($event, index)" />
+    <section
+      v-for="(item, index) in dataStore.buttonData"
+      :key="index"
+      class="button-ctn"
+    >
+      <BigButton :button-data="item" :index="index" />
     </section>
   </article>
 </template>
@@ -10,11 +14,6 @@
 import BigButton from '../components/BigButton.vue'
 import { useDataStore } from '../store/dataStore'
 const dataStore = useDataStore()
-
-//切换开关
-const clickSwitch = (value: boolean, index: number) => {
-  dataStore.updateSwitch(index, value)
-}
 </script>
 
 <style scoped>

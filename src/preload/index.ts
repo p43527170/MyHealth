@@ -1,6 +1,5 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-console.log(electronAPI)
 
 const api = {}
 
@@ -11,15 +10,6 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    //contextBridge.exposeInMainWorld通信最小化方法
-    contextBridge.exposeInMainWorld('electronApi', {
-      minimize: () => {
-        ipcRenderer.send('minimize');
-      },
-      close: () => {
-        ipcRenderer.send('close');
-      }
-    })
   } catch (error) {
     console.error(error)
   }

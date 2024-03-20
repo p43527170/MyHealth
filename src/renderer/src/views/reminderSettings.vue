@@ -1,13 +1,8 @@
 <template>
-  <section v-if="id && id != 'qita'" class="reminder-container">
-    <div class="mode-settings" :style="{ flex: id == 'heshui' ? 4 : 2 }">
-      <div
-        v-for="(item, index) in data[id]"
-        :key="index"
-        class="mode-button"
-        :class="active == index ? 'active' : ''"
-        @click="changeMode(index)"
-      >
+  <section v-if="name && name != 'qita'" class="reminder-container">
+    <div class="mode-settings" :style="{ flex: name == 'heshui' ? 4 : 2 }">
+      <div v-for="(item, index) in modeData[name]" :key="index" class="mode-button"
+        :class="active == index ? 'active' : ''" @click="changeMode(index)">
         <span class="mode-title">{{ item.title }}</span>
         <span class="mode-text">{{ item.text }}</span>
       </div>
@@ -15,25 +10,19 @@
     <div class="reminder-settings">
       <span class="title">声音</span>
       <div class="setting-button">
-        <el-switch
-          v-model="vocalValue"
-          :active-value="true"
-          :inactive-value="false"
-          style="--el-switch-on-color: #e9ad4d"
-        ></el-switch>
+        <el-switch v-model="data.voiceValue" style="--el-switch-on-color: #e9ad4d"
+          @change="changeValue($event, 'voiceValue')"></el-switch>
       </div>
     </div>
     <div class="reminder-settings">
       <span class="title">强度</span>
       <div class="setting-button">
-        <el-radio-group
-          v-model="strengthValue"
+        <el-radio-group name="strength" v-model="data.strengthValue"
           style="--el-color-primary: #e9ad4d; flex-direction: column; width: 194px; display: block"
-          @change="changeStrength"
-        >
-          <el-radio value="1">弱提醒 (右下角气泡提醒)</el-radio>
-          <el-radio value="2">中提醒 (屏幕上方气泡提醒)</el-radio>
-          <el-radio value="3">强提醒 (遮挡屏幕强制休息)</el-radio>
+          @change="changeValue($event, 'strengthValue')">
+          <el-radio :value="0">弱提醒 (右下角气泡提醒)</el-radio>
+          <el-radio :value="1">中提醒 (屏幕上方气泡提醒)</el-radio>
+          <el-radio :value="2">强提醒 (遮挡屏幕强制休息)</el-radio>
         </el-radio-group>
       </div>
     </div>
@@ -46,54 +35,25 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-
+import { useDataStore } from '@renderer/store/dataStore'
+const dataStore = useDataStore()
 const route = useRoute()
-const id = route.query.id as string
-const data = {
-  yanjing: [
-    {
-      title: '20-20-20 护眼法',
-      text: '持续用眼 20 分钟，向 20 英尺外眺望 20 秒'
-    },
-    {
-      title: '一小时护眼法',
-      text: '持续用眼 1 小时， 闭眼或眺望远方 1 ~ 5 分钟'
-    }
-  ],
-  jiuzuo: [
-    {
-      title: '一小时久坐提醒',
-      text: '每持续工作 60 分钟，提醒活动 1 分钟'
-    },
-    {
-      title: '两小时久坐提醒',
-      text: '每持续工作 120 分钟，提醒活动 1 分钟'
-    }
-  ],
-  heshui: [
-    {
-      title: '半小时喝水提醒',
-      text: '每隔 30 分钟，提醒喝水 1 次'
-    },
-    {
-      title: '一小时久坐提醒',
-      text: '每隔 60 分钟，提醒喝水 1 次'
-    },
-    {
-      title: '两小时久坐提醒',
-      text: '每隔 120 分钟，提醒喝水 1 次'
-    }
-  ]
-}
+const name = route.query.name as string
+const dataIndex = route.query.dataIndex as unknown as number
+
+const modeData = dataStore.reminderSettings
+const data = ref(dataStore.buttonData[dataIndex])
+
 const active = ref(0)
-const strengthValue = ref('1')
-const vocalValue = ref(false)
-const changeMode = (e) => {
-  active.value = e
+console.log(data.value.strengthValue);
+const changeMode = (value: number) => {
+  active.value = value
+  dataStore.updateReminder(dataIndex, 'modeValue', value)
 }
 
-const changeStrength = (e) => {
-  console.log(e)
+const changeValue = (value, label) => {
+  console.log(value,label)
+  dataStore.updateReminder(dataIndex, label, value)
 }
 </script>
 

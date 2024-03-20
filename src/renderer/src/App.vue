@@ -6,16 +6,20 @@ const router = useRouter()
 const goBack = () => {
   router.back()
 }
+
 //主进程最小化
 const windowMinimize = () => {
-  window.electronApi.minimize()
+  window.electron.ipcRenderer.invoke('minimize')
 }
 //主进程关闭
 const windowClose = () => {
-  window.electronApi.close()
+  window.electron.ipcRenderer.invoke('close')
 }
 const isHomeRoute = computed(() => {
-  return router.currentRoute.value.name === 'Index' || router.currentRoute.value.path === '/'
+  return (
+    router.currentRoute.value.name === 'Index' ||
+    router.currentRoute.value.path === '/'
+  )
 })
 
 //goSetting跳转设置页

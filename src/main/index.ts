@@ -1,4 +1,12 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, nativeImage, Menu } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  Tray,
+  nativeImage,
+  Menu
+} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -11,7 +19,7 @@ function toggleMainWindow() {
   } else {
     mainWindow?.show()
     if (mainWindow?.isMinimized()) {
-      mainWindow.restore();
+      mainWindow.restore()
     }
   }
 }
@@ -35,11 +43,11 @@ function createWindow(): void {
   })
 
   //窗口最小化
-  ipcMain.on('minimize', () => {
+  ipcMain.handle('minimize', () => {
     mainWindow?.minimize()
   })
   //窗口关闭方法
-  ipcMain.on('close', () => {
+  ipcMain.handle('close', () => {
     mainWindow?.hide()
   })
 
@@ -71,10 +79,24 @@ app.whenReady().then(() => {
 
   // 设置托盘菜单
   const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '设置',
+      click: () =>
+        function () {
+          console.log('设置')
+        }
+    },
+    {
+      label: '重置提醒时间',
+      click: () =>
+        function () {
+          console.log('重置提醒时间')
+        }
+    },
     { label: '显示/隐藏窗口', click: () => toggleMainWindow() },
     { label: '退出', click: () => app.quit() }
   ])
-  tray.setToolTip('My App');
+  tray.setToolTip('星璘健康')
   tray.setContextMenu(contextMenu)
   //托盘点击事件
   tray.on('click', () => {
