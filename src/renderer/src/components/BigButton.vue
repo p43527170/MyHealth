@@ -14,12 +14,14 @@
       <p>
         强度：<span>{{ localData.strength?.value }}</span>
       </p>
-      <el-switch
-        v-if="localData.switch"
-        v-model="localData.switch.value"
-        style="--el-switch-on-color: #ff9bc4"
-        @change="clickHandle"
-      />
+      <div @click="toggleSwitch">
+        <el-switch
+          v-if="localData.switch"
+          v-model="localData.switch.value"
+          style="--el-switch-on-color: #ff9bc4"
+          @change="clickHandle"
+        />
+      </div>
     </div>
     <div v-if="localData.other.value" class="content">
       <p>
@@ -34,6 +36,8 @@
 
 <script setup lang="ts">
 import { toRefs } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 interface Iprops {
   buttonData: {
@@ -55,14 +59,21 @@ const localData = toRefs(props.buttonData)
 const emits = defineEmits(['clickSwitch'])
 
 //点击clickSwitch向父组件传参
-const clickHandle = () => {
-  emits('clickSwitch')
+const clickHandle = (value) => {
+  emits('clickSwitch', value)
 }
-
+function toggleSwitch(event) {
+  // 阻止事件冒泡到父元素，避免触发页面跳转
+  event.stopPropagation()
+}
 const clickRouter = () => {
   //点击切换路由router跳转
-  // router.push('/home')
-  console.log('click')
+  router.push({
+    name: 'ReminderSettings',
+    query: {
+      id: localData.url.value
+    }
+  })
 }
 </script>
 
@@ -76,6 +87,11 @@ const clickRouter = () => {
   height: 100%;
   box-shadow: 0 0 18px 0 rgba(131, 122, 143, 0.2);
   cursor: pointer;
+  transition: background 0.24s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(70, 71, 88, 0.6) 0%, rgba(79, 85, 99, 0.7) 100%);
+  }
 
   .title {
     display: flex;

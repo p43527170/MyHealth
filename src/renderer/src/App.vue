@@ -1,52 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import BigButton from './components/BigButton.vue'
-import heshui from './image/heshui.png'
-import jiuzuo from './image/jiuzuo.png'
-import yanjing from './image/yanjing.png'
-import qita from './image/qita.png'
-
-const buttonData = ref([
-  {
-    title: '护眼提醒',
-    mode: '20-20-20 护眼法',
-    voice: '关',
-    strength: '中',
-    url: 'https://www.baidu.com',
-    switch: true,
-    icon: yanjing,
-    other: false
-  },
-  {
-    title: '久坐提醒',
-    mode: '一小时久坐提醒',
-    voice: '关',
-    strength: '低',
-    url: 'https://www.baidu.com',
-    switch: true,
-    icon: jiuzuo,
-    other: false
-  },
-  {
-    title: '喝水提醒',
-    mode: '1小时喝水提醒',
-    voice: '关',
-    strength: '中',
-    url: 'https://www.baidu.com',
-    switch: false,
-    icon: heshui,
-    other: false
-  },
-  {
-    title: '自定义提醒',
-    allocation: 0,
-    startup: 0,
-    url: 'https://www.baidu.com',
-    icon: qita,
-    other: true
-  }
-])
-
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+//goBack返回上一页
+const goBack = () => {
+  router.back()
+}
 //主进程最小化
 const windowMinimize = () => {
   window.electronApi.minimize()
@@ -55,21 +14,29 @@ const windowMinimize = () => {
 const windowClose = () => {
   window.electronApi.close()
 }
+const isHomeRoute = computed(() => {
+  return router.currentRoute.value.name === 'Index' || router.currentRoute.value.path === '/'
+})
 
-//切换开关
-const clickSwitch = (index) => {
-  buttonData[index].switch = !buttonData[index].switch
+//goSetting跳转设置页
+const goSetting = () => {
+  router.push('/setting')
 }
 </script>
 <template>
   <div class="container">
     <header class="header">
-      <div class="logo">
+      <div class="myLogo">
         <img src="./image/logobai.png" alt="logo" />
         <span class="title">星璘健康</span>
       </div>
       <section class="window-buttons">
-        <button class="button" @click="windowMinimize">
+        <button v-show="!isHomeRoute" class="button" @click="goBack">
+          <el-icon size="14">
+            <iEpArrowLeftBold />
+          </el-icon>
+        </button>
+        <button class="button" @click="goSetting">
           <el-icon size="14">
             <iEpTools />
           </el-icon>
@@ -86,11 +53,7 @@ const clickSwitch = (index) => {
         </button>
       </section>
     </header>
-    <article class="content">
-      <section v-for="(item, index) in buttonData" :key="index" class="button-ctn">
-        <BigButton :button-data="item" @click-switch="clickSwitch(index)" />
-      </section>
-    </article>
+    <RouterView />
   </div>
 </template>
 
@@ -116,7 +79,7 @@ const clickSwitch = (index) => {
     -webkit-user-select: none;
     color: rgba(219, 221, 255, 0.6);
 
-    .logo {
+    .myLogo {
       display: flex;
 
       img {
@@ -157,21 +120,6 @@ const clickSwitch = (index) => {
           background-color: rgba(219, 221, 255, 0.2);
         }
       }
-    }
-  }
-
-  .content {
-    height: calc(100% - 30px);
-    display: flex;
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 16px;
-    padding-bottom: 0;
-
-    .button-ctn {
-      width: 48%;
-      margin-bottom: 16px;
     }
   }
 }

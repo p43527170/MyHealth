@@ -1,0 +1,35 @@
+<template>
+  <article class="content">
+    <section v-for="(item, index) in dataStore.buttonData" :key="index" class="button-ctn">
+      <BigButton :button-data="item" @click-switch="clickSwitch($event, index)" />
+    </section>
+  </article>
+</template>
+
+<script setup lang="ts">
+import BigButton from '../components/BigButton.vue'
+import { useDataStore } from '../store/dataStore'
+const dataStore = useDataStore()
+
+//切换开关
+const clickSwitch = (value: boolean, index: number) => {
+  dataStore.updateSwitch(index, value)
+}
+</script>
+
+<style scoped>
+.content {
+  height: calc(100% - 30px);
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 16px;
+  padding-bottom: 0;
+
+  .button-ctn {
+    width: 48%;
+    margin-bottom: 16px;
+  }
+}
+</style>

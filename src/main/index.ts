@@ -1,11 +1,23 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, nativeImage, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 
+let mainWindow: Electron.BrowserWindow | null = null
+function toggleMainWindow() {
+  if (mainWindow?.isVisible()) {
+    mainWindow.hide()
+  } else {
+    mainWindow?.show()
+    if (mainWindow?.isMinimized()) {
+      mainWindow.restore();
+    }
+  }
+}
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 480,
     height: 400,
     show: false,
@@ -22,31 +34,22 @@ function createWindow(): void {
     }
   })
 
-  //登录窗口最小化 
-  ipcMain.on('window-min', function () {
-    mainWindow.minimize();
+  //窗口最小化
+  ipcMain.on('minimize', () => {
+    mainWindow?.minimize()
   })
-  //登录窗口关闭
-  ipcMain.on('window-close', function () {
-    mainWindow.close();
+  //窗口关闭方法
+  ipcMain.on('close', () => {
+    mainWindow?.hide()
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
-  })
-
-  //窗口最小化
-  ipcMain.on('minimize', () => {
-    mainWindow.minimize()
-  })
-  //窗口关闭方法
-  ipcMain.on('close', () => {
-    mainWindow.close()
   })
 
   // HMR for renderer base on electron-vite cli.
@@ -62,6 +65,21 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  //创建系统托盘图标
+  const trayImage = nativeImage.createFromPath(iconSimple)
+  const tray = new Tray(trayImage)
+
+  // 设置托盘菜单
+  const contextMenu = Menu.buildFromTemplate([
+    { label: '显示/隐藏窗口', click: () => toggleMainWindow() },
+    { label: '退出', click: () => app.quit() }
+  ])
+  tray.setToolTip('My App');
+  tray.setContextMenu(contextMenu)
+  //托盘点击事件
+  tray.on('click', () => {
+    toggleMainWindow()
+  })
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
