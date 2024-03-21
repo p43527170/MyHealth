@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 import { useDataStore } from '@renderer/store/dataStore'
 const dataStore = useDataStore()
 
 dataStore.initAppData()
+const { setting } = toRefs(dataStore)
+for (const prop in setting.value) {
+  watch(
+    () => setting.value[prop],
+    (newValue) => {
+      // 在这里可以调用针对特定属性变化的方法
+      dataStore.updateSetting(prop, newValue)
+    }
+  )
+}
 //goBack返回上一页
 const goBack = () => {
   router.back()

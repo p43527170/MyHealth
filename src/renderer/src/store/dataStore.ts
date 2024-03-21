@@ -111,48 +111,13 @@ export const useDataStore = defineStore('dataStore', {
     // double: (state) => state.count * 2
   },
   actions: {
-    //开关提醒
-    async updateSwitch(index: number, value: boolean) {
-      this.appData[index].switch = value
-      await window.electron.ipcRenderer.invoke(
-        'setData',
-        `appData.${index}.switch`,
-        value
-      )
-    },
-    //修改系统设置
-    async toggleSetting(key: string, newValue: boolean) {
-      this.$patch((state) => {
-        state.setting[key] = newValue
-      })
-      await window.electron.ipcRenderer.invoke(
-        'setData',
-        `settingData.${key}`,
-        newValue
-      )
-    },
-    //修改提醒
-    async updateReminder(
-      index: number,
-      label: string,
-      value: number | boolean
-    ) {
-      this.$patch((state) => {
-        state.appData[index][label] = value
-      })
-      await window.electron.ipcRenderer.invoke(
-        'setData',
-        `appData.${index}.${label}`,
-        value
-      )
-    },
-    //获取用户数据
+    //获取本地所有数据-初始化业务
     async initAppData() {
+      //获取appData数据，如果本地数据为空，则使用默认数据并持久化
       const appData = await window.electron.ipcRenderer.invoke(
         'getData',
         'appData'
       )
-      console.log(appData)
       if (
         appData === undefined ||
         appData === null ||
@@ -168,11 +133,11 @@ export const useDataStore = defineStore('dataStore', {
       } else {
         this.appData = appData
       }
+      //获取系统数据，如果本地数据为空，则使用默认数据并持久化
       const settingData = await window.electron.ipcRenderer.invoke(
         'getData',
         'settingData'
       )
-      //判断如果对象为空，则使用默认设置
       if (
         settingData === null ||
         settingData === undefined ||
@@ -187,7 +152,57 @@ export const useDataStore = defineStore('dataStore', {
       } else {
         this.setting = settingData
       }
-      await window.electron.ipcRenderer.invoke('startWork', 'settingData')
+      await window.electron.ipcRenderer.invoke('startWork')
+    },
+    //修改系统设置数据
+    async toggleSetting(key: string, newValue: boolean) {
+      console.log('修改系统设置')
+      this.$patch((state) => {
+        state.setting[key] = newValue
+      })
+    },
+    //系统设置数据持久化-更新业务
+    async updateSetting(key, newValue) {
+      await window.electron.ipcRenderer.invoke(
+        'setData',
+        `settingData.${key}`,
+        newValue
+      )
+      await window.electron.ipcRenderer.invoke('upDataWork', key, newValue)
+    },
+    //开关appData提醒-更新持久化数据
+    async updateSwitch(index: number, value: boolean) {
+      this.appData[index].switch = value
+      this.updateAppData(index, 'switch', value)
+    },
+    //修改appData提醒详情-更新持久化数据
+    async updateReminder(
+      index: number,
+      label: string,
+      value: number | boolean
+    ) {
+      this.$patch((state) => {
+        state.appData[index][label] = value
+      })
+      this.updateAppData(index, label, value)
+    },
+    //更新appData持久化数据-更新业务
+    async updateAppData(
+      index: number,
+      key: string,
+      newValue: boolean | number
+    ) {
+      await window.electron.ipcRenderer.invoke(
+        'setData',
+        `appData.${index}.${key}`,
+        newValue
+      )
+      await window.electron.ipcRenderer.invoke(
+        'upDataAppWork',
+        index,
+        key,
+        newValue
+      )
     }
   }
 })

@@ -12,7 +12,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
-import { systemWork } from './system'
+import { systemWork, upDataSystemWork } from './system'
+import { startBusiness, updataMode, updataVoice, updataStringth } from './business'
 
 const store = new Store()
 let mainWindow: Electron.BrowserWindow | null = null
@@ -45,8 +46,29 @@ function createWindow(): void {
     }
   })
 
+  //执行系统设置和App业务
+  ipcMain.handle('startWork', async () => {
+    const info = await store.get('settingData')
+    systemWork(info)
+    const appData = await store.get('appData')
+    startBusiness(appData as object)
+  })
+  //更新系统设置业务
+  ipcMain.handle('upDataWork', async (_event, key, newValue) => {
+    upDataSystemWork(key, newValue)
+  })
+  //更新App业务
+  ipcMain.handle('upDataAppWork', async (_event, index, key, newValue) => {
+    console.log(index, key, newValue)
+    if(key === 'modeValue'){
+      console.log(123);
+      updataMode(newValue)
+      updataVoice(newValue)
+      updataStringth(newValue)
+    }
+  })
+  //获取数据
   ipcMain.handle('getData', (_event, key) => {
-    console.log(key)
     return store.get(key)
   })
   ipcMain.handle('setData', async (_event, key, value) => {
@@ -59,12 +81,6 @@ function createWindow(): void {
   //窗口关闭方法
   ipcMain.handle('close', () => {
     mainWindow?.hide()
-  })
-
-  ipcMain.handle('startWork', async (_event, name) => {
-    const info = await store.get(name)
-    console.log(info)
-    systemWork(info)
   })
 
   mainWindow.on('ready-to-show', () => {
