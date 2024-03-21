@@ -2,11 +2,14 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
+import { useDataStore } from '@renderer/store/dataStore'
+const dataStore = useDataStore()
+
+dataStore.initAppData()
 //goBack返回上一页
 const goBack = () => {
   router.back()
 }
-
 //主进程最小化
 const windowMinimize = () => {
   window.electron.ipcRenderer.invoke('minimize')
@@ -21,7 +24,6 @@ const isHomeRoute = computed(() => {
     router.currentRoute.value.path === '/'
   )
 })
-
 //goSetting跳转设置页
 const goSetting = () => {
   router.push('/setting')

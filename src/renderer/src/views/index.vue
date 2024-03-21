@@ -1,11 +1,7 @@
 <template>
   <article class="content">
-    <section
-      v-for="(item, index) in dataStore.buttonData"
-      :key="index"
-      class="button-ctn"
-    >
-      <BigButton :button-data="item" :index="index" />
+    <section v-for="(item, index) in dataStore.appData" :key="index" class="button-ctn">
+      <BigButton :app-data="item" :index="index" />
     </section>
   </article>
 </template>

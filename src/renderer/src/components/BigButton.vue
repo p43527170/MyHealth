@@ -17,8 +17,12 @@
         强度：<span>{{ strength[localData.strengthValue.value] }}</span>
       </p>
       <div style="width: fit-content" @click="toggleSwitch">
-        <el-switch v-if="localData.switch" v-model="localData.switch.value" style="--el-switch-on-color: #ff9bc4"
-          @change="clickHandle" />
+        <el-switch
+          v-if="localData.switch"
+          v-model="localData.switch.value"
+          style="--el-switch-on-color: #ff9bc4"
+          @change="clickHandle"
+        />
       </div>
     </div>
     <div v-if="localData.other.value" class="content">
@@ -40,7 +44,7 @@ const dataStore = useDataStore()
 const router = useRouter()
 
 interface Iprops {
-  buttonData: {
+  appData: {
     title: string
     url: string
     icon: string
@@ -54,7 +58,7 @@ interface Iprops {
   index: number
 }
 const props = defineProps<Iprops>()
-const localData = toRefs(props.buttonData)
+const localData = toRefs(props.appData)
 const dataIndex = props.index
 const mode = dataStore.reminderSettings[localData.url.value]
 const strength = dataStore.strength

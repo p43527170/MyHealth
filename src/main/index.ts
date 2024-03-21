@@ -11,7 +11,10 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
+import Store from 'electron-store'
+import { systemWork } from './system'
 
+const store = new Store()
 let mainWindow: Electron.BrowserWindow | null = null
 function toggleMainWindow() {
   if (mainWindow?.isVisible()) {
@@ -42,6 +45,13 @@ function createWindow(): void {
     }
   })
 
+  ipcMain.handle('getData', (_event, key) => {
+    console.log(key)
+    return store.get(key)
+  })
+  ipcMain.handle('setData', async (_event, key, value) => {
+    store.set(key, value)
+  })
   //窗口最小化
   ipcMain.handle('minimize', () => {
     mainWindow?.minimize()
@@ -49,6 +59,12 @@ function createWindow(): void {
   //窗口关闭方法
   ipcMain.handle('close', () => {
     mainWindow?.hide()
+  })
+
+  ipcMain.handle('startWork', async (_event, name) => {
+    const info = await store.get(name)
+    console.log(info)
+    systemWork(info)
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -62,6 +78,7 @@ function createWindow(): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
+  // mainWindow.loadURL('10.78.20.114/login')
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {

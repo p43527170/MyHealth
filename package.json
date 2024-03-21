@@ -1,5 +1,5 @@
 {
-  "name": "eyes",
+  "name": "xlHealth",
   "version": "1.0.0",
   "description": "An Electron application with Vue and TypeScript",
   "main": "./out/main/index.js",
@@ -24,6 +24,8 @@
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "@element-plus/icons-vue": "^2.3.1",
+    "auto-launch": "^5.0.6",
+    "electron-store": "^8.2.0",
     "electron-updater": "^6.1.7",
     "element-plus": "^2.6.1",
     "pinia": "^2.1.7",

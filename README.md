@@ -1,7 +1,7 @@
 <<<<<<< HEAD
 # MyHealth
 =======
-# eyes
+# xlHealth
 
 An Electron application with Vue and TypeScript
 

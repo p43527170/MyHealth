@@ -3,100 +3,70 @@ import heshui from '../image/heshui.png'
 import jiuzuo from '../image/jiuzuo.png'
 import yanjing from '../image/yanjing.png'
 import qita from '../image/qita.png'
-interface AlarmConfig {
-  reminderFrequency: number
-  reminderCount: number
-  reminderAction: ReminderActionType
+import { Setting, AllReminderItems } from './datastore.interface'
+
+//默认初始数据
+const defaultSetting: AllReminderItems[] = [
+  {
+    title: '护眼提醒',
+    url: 'yanjing',
+    switch: true,
+    icon: yanjing,
+    other: false,
+    modeValue: 0,
+    voiceValue: false,
+    strengthValue: 1
+  },
+  {
+    title: '久坐提醒',
+    url: 'jiuzuo',
+    switch: true,
+    icon: jiuzuo,
+    other: false,
+    modeValue: 0,
+    voiceValue: false,
+    strengthValue: 0
+  },
+  {
+    title: '喝水提醒',
+    url: 'heshui',
+    switch: false,
+    icon: heshui,
+    other: false,
+    modeValue: 0,
+    voiceValue: true,
+    strengthValue: 0
+  },
+  {
+    title: '自定义提醒',
+    allocation: 0,
+    startup: 0,
+    url: 'qita',
+    icon: qita,
+    other: true,
+    custom: []
+  }
+]
+const defaultSystemSettings: Setting = {
+  powerOn: true,
+  merge: false,
+  floatingWindow: false,
+  automaticUpgrade: false
 }
-
-enum ReminderActionType {
-  ONLY_SOUND = '只有声音',
-  WEAK_REMINDER = '弱提醒',
-  MEDIUM_REMINDER = '中提醒',
-  STRONG_REMINDER = '强提醒',
-  SHUTDOWN = '关机'
-}
-
-interface CommonReminderItem {
-  title: string
-  url: string
-  icon: string
-  other: boolean
-  switch?: boolean
-  modeValue?: number
-  voiceValue?: boolean
-  strengthValue?: number
-}
-
-interface CustomReminderItem extends CommonReminderItem {
-  allocation: number
-  startup: number
-  custom: AlarmConfig[] // 假设AlarmConfig是你之前定义的闹钟配置类型
-}
-
-type AllReminderItems = CommonReminderItem | CustomReminderItem
-
-interface Setting {
-  powerOn: boolean
-  merge: boolean
-  floatingWindow: boolean
-  automaticUpgrade: boolean
-}
-
 export const useDataStore = defineStore('dataStore', {
   state: (): {
-    buttonData: AllReminderItems[]
+    appData: AllReminderItems[]
     setting: Setting
     reminderSettings: object
     strength: object
     voice: object
   } => ({
-    buttonData: [
-      {
-        title: '护眼提醒',
-        url: 'yanjing',
-        switch: true,
-        icon: yanjing,
-        other: false,
-        modeValue: 0,
-        voiceValue: false,
-        strengthValue:1
-      },
-      {
-        title: '久坐提醒',
-        url: 'jiuzuo',
-        switch: true,
-        icon: jiuzuo,
-        other: false,
-        modeValue: 0,
-        voiceValue: false,
-        strengthValue: 0
-      },
-      {
-        title: '喝水提醒',
-        url: 'heshui',
-        switch: false,
-        icon: heshui,
-        other: false,
-        modeValue: 0,
-        voiceValue: true,
-        strengthValue: 0
-      },
-      {
-        title: '自定义提醒',
-        allocation: 0,
-        startup: 0,
-        url: 'qita',
-        icon: qita,
-        other: true,
-        custom: []
-      }
-    ],
+    appData: [],
     setting: {
-      powerOn: true,
-      merge: true,
+      powerOn: false,
+      merge: false,
       floatingWindow: false,
-      automaticUpgrade: true
+      automaticUpgrade: false
     },
     reminderSettings: {
       yanjing: [
@@ -142,22 +112,82 @@ export const useDataStore = defineStore('dataStore', {
   },
   actions: {
     //开关提醒
-    updateSwitch(index: number, value: boolean) {
-      this.buttonData[index].switch = value
+    async updateSwitch(index: number, value: boolean) {
+      this.appData[index].switch = value
+      await window.electron.ipcRenderer.invoke(
+        'setData',
+        `appData.${index}.switch`,
+        value
+      )
     },
     //修改系统设置
-    toggleSetting(key: string) {
+    async toggleSetting(key: string, newValue: boolean) {
       this.$patch((state) => {
-        state.setting[key] = !state.setting[key]
+        state.setting[key] = newValue
       })
+      await window.electron.ipcRenderer.invoke(
+        'setData',
+        `settingData.${key}`,
+        newValue
+      )
     },
     //修改提醒
-    updateReminder(index: number, label: string, value: number | boolean) {
+    async updateReminder(
+      index: number,
+      label: string,
+      value: number | boolean
+    ) {
       this.$patch((state) => {
-        console.log(state.buttonData[index][label])
-        state.buttonData[index][label] = value
+        state.appData[index][label] = value
       })
-      console.log(this.buttonData[index])
+      await window.electron.ipcRenderer.invoke(
+        'setData',
+        `appData.${index}.${label}`,
+        value
+      )
+    },
+    //获取用户数据
+    async initAppData() {
+      const appData = await window.electron.ipcRenderer.invoke(
+        'getData',
+        'appData'
+      )
+      console.log(appData)
+      if (
+        appData === undefined ||
+        appData === null ||
+        appData === '' ||
+        appData.length === 0
+      ) {
+        this.appData = defaultSetting
+        await window.electron.ipcRenderer.invoke(
+          'setData',
+          'appData',
+          defaultSetting
+        )
+      } else {
+        this.appData = appData
+      }
+      const settingData = await window.electron.ipcRenderer.invoke(
+        'getData',
+        'settingData'
+      )
+      //判断如果对象为空，则使用默认设置
+      if (
+        settingData === null ||
+        settingData === undefined ||
+        settingData === ''
+      ) {
+        this.setting = defaultSystemSettings
+        await window.electron.ipcRenderer.invoke(
+          'setData',
+          'settingData',
+          defaultSystemSettings
+        )
+      } else {
+        this.setting = settingData
+      }
+      await window.electron.ipcRenderer.invoke('startWork', 'settingData')
     }
   }
 })

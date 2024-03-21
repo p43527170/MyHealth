@@ -8,23 +8,17 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BigButton: typeof import('./src/components/BigButton.vue')['default']
-    DrinkingWater: typeof import('./src/components/DrinkingWater.vue')['default']
-    ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElLink: typeof import('element-plus/es')['ElLink']
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
-    EyeProtection: typeof import('./src/components/EyeProtection.vue')['default']
     IEpArrowLeftBold: typeof import('~icons/ep/arrow-left-bold')['default']
     IEpCloseBold: typeof import('~icons/ep/close-bold')['default']
     IEpSemiSelect: typeof import('~icons/ep/semi-select')['default']
     IEpTools: typeof import('~icons/ep/tools')['default']
-    Other: typeof import('./src/components/Other.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    Sedentary: typeof import('./src/components/Sedentary.vue')['default']
-    Versions: typeof import('./src/components/Versions.vue')['default']
   }
 }

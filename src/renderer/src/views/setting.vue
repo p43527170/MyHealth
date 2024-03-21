@@ -4,8 +4,8 @@
       <span>开机启动</span>
       <div>
         <el-checkbox
-          v-model="setting.powerOn"
-          @change="dataStore.toggleSetting('powerOn')"
+          :checked="setting.powerOn"
+          @change="(newValue) => dataStore.toggleSetting('powerOn', newValue)"
         />
       </div>
     </div>
@@ -14,7 +14,7 @@
       <div>
         <el-checkbox
           v-model="setting.merge"
-          @change="dataStore.toggleSetting('merge')"
+          @change="(newValue) => dataStore.toggleSetting('merge', newValue)"
         />
       </div>
     </div>
@@ -23,7 +23,7 @@
       <div>
         <el-checkbox
           v-model="setting.floatingWindow"
-          @change="dataStore.toggleSetting('floatingWindow')"
+          @change="(newValue) => dataStore.toggleSetting('floatingWindow', newValue)"
         />
       </div>
     </div>
@@ -32,7 +32,7 @@
       <div>
         <el-checkbox
           v-model="setting.automaticUpgrade"
-          @change="dataStore.toggleSetting('automaticUpgrade')"
+          @change="(newValue) => dataStore.toggleSetting('automaticUpgrade', newValue)"
         />
       </div>
     </div>

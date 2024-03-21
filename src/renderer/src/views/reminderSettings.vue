@@ -11,7 +11,8 @@
       <span class="title">声音</span>
       <div class="setting-button">
         <el-switch v-model="data.voiceValue" style="--el-switch-on-color: #e9ad4d"
-          @change="changeValue($event, 'voiceValue')"></el-switch>
+          @change="(value: boolean) => dataStore.updateReminder(dataIndex, 'voiceValue', value)"
+          />
       </div>
     </div>
     <div class="reminder-settings">
@@ -19,7 +20,8 @@
       <div class="setting-button">
         <el-radio-group name="strength" v-model="data.strengthValue"
           style="--el-color-primary: #e9ad4d; flex-direction: column; width: 194px; display: block"
-          @change="changeValue($event, 'strengthValue')">
+          @change="(value: number) => dataStore.updateReminder(dataIndex, 'strengthValue', value)">
+          >
           <el-radio :value="0">弱提醒 (右下角气泡提醒)</el-radio>
           <el-radio :value="1">中提醒 (屏幕上方气泡提醒)</el-radio>
           <el-radio :value="2">强提醒 (遮挡屏幕强制休息)</el-radio>
@@ -42,18 +44,12 @@ const name = route.query.name as string
 const dataIndex = route.query.dataIndex as unknown as number
 
 const modeData = dataStore.reminderSettings
-const data = ref(dataStore.buttonData[dataIndex])
+const data = ref(dataStore.appData[dataIndex])
 
-const active = ref(0)
-console.log(data.value.strengthValue);
+const active = ref(data.value.modeValue)
 const changeMode = (value: number) => {
   active.value = value
   dataStore.updateReminder(dataIndex, 'modeValue', value)
-}
-
-const changeValue = (value, label) => {
-  console.log(value,label)
-  dataStore.updateReminder(dataIndex, label, value)
 }
 </script>
 
