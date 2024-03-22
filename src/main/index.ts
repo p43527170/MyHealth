@@ -13,7 +13,7 @@ import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
 import { systemWork, upDataSystemWork } from './system'
-import { startBusiness, updataMode, updataVoice, updataStringth } from './business'
+import { startBusiness, updataBusiness } from './business'
 
 const store = new Store()
 let mainWindow: Electron.BrowserWindow | null = null
@@ -46,7 +46,7 @@ function createWindow(): void {
     }
   })
 
-  //执行系统设置和App业务
+  //启动执行系统设置和App业务
   ipcMain.handle('startWork', async () => {
     const info = await store.get('settingData')
     systemWork(info)
@@ -59,13 +59,7 @@ function createWindow(): void {
   })
   //更新App业务
   ipcMain.handle('upDataAppWork', async (_event, index, key, newValue) => {
-    console.log(index, key, newValue)
-    if(key === 'modeValue'){
-      console.log(123);
-      updataMode(newValue)
-      updataVoice(newValue)
-      updataStringth(newValue)
-    }
+    updataBusiness(index, key, newValue)
   })
   //获取数据
   ipcMain.handle('getData', (_event, key) => {
@@ -94,7 +88,7 @@ function createWindow(): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  // mainWindow.loadURL('10.78.20.114/login')
+  // mainWindow.loadURL('http://10.78.20.114/login')
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -144,7 +138,7 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-
+  app.setAppUserModelId('星璘健康提醒')
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
