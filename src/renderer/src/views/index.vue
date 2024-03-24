@@ -49,8 +49,6 @@ const windowMinimize = () => {
 const windowClose = () => {
   window.electron.ipcRenderer.invoke('close')
 }
-console.log(router.currentRoute.value.name);
-console.log(router.currentRoute.value.path);
 const isHomeRoute = computed(() => {
   return (
     router.currentRoute.value.name === 'Home' ||
