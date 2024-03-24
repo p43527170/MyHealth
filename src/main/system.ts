@@ -10,7 +10,6 @@ const autoLauncher = new AutoLaunch({
 })
 
 export const systemWork = (info) => {
-  console.log('systemWorkSetting')
   const { powerOn, merge, floatingWindow, automaticUpgrade } = info
   // 启用开机自启动
   if (powerOn) {

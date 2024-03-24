@@ -19,15 +19,6 @@
       </div>
     </div>
     <div class="setting-ctn">
-      <span>开启悬浮窗</span>
-      <div>
-        <el-checkbox
-          v-model="setting.floatingWindow"
-          @change="(newValue) => dataStore.toggleSetting('floatingWindow', newValue)"
-        />
-      </div>
-    </div>
-    <div class="setting-ctn">
       <span>自动升级</span>
       <div>
         <el-checkbox
@@ -40,6 +31,10 @@
       <span>重置所有设置</span>
       <el-link type="primary" :underline="false">重置</el-link>
     </div>
+    <!-- <div class="setting-ctn">
+      <span>清理缓存</span>
+      <el-link type="primary" :underline="false">清理</el-link>
+    </div> -->
   </div>
 </template>
 
@@ -47,7 +42,6 @@
 import { ref } from 'vue'
 import { useDataStore } from '@renderer/store/dataStore'
 const dataStore = useDataStore()
-console.log(dataStore.setting)
 const setting = ref(dataStore.setting)
 </script>
 

@@ -5,7 +5,8 @@ import {
   ipcMain,
   Tray,
   nativeImage,
-  Menu
+  Menu,
+  screen
 } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -13,9 +14,9 @@ import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
 import { systemWork, upDataSystemWork } from './system'
-import { startBusiness, updataBusiness } from './business'
-
+import { startCustomIntervalTask, updataBusiness } from './mainBusiness'
 const store = new Store()
+export const allWindows: BrowserWindow[] = []
 let mainWindow: Electron.BrowserWindow | null = null
 function toggleMainWindow() {
   if (mainWindow?.isVisible()) {
@@ -27,6 +28,7 @@ function toggleMainWindow() {
     }
   }
 }
+
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -39,43 +41,14 @@ function createWindow(): void {
     frame: false,
     maximizable: false,
     titleBarStyle: 'hidden',
+    backgroundColor: '#1b1b1f',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
-
-  //启动执行系统设置和App业务
-  ipcMain.handle('startWork', async () => {
-    const info = await store.get('settingData')
-    systemWork(info)
-    const appData = await store.get('appData')
-    startBusiness(appData as object)
-  })
-  //更新系统设置业务
-  ipcMain.handle('upDataWork', async (_event, key, newValue) => {
-    upDataSystemWork(key, newValue)
-  })
-  //更新App业务
-  ipcMain.handle('upDataAppWork', async (_event, index, key, newValue) => {
-    updataBusiness(index, key, newValue)
-  })
-  //获取数据
-  ipcMain.handle('getData', (_event, key) => {
-    return store.get(key)
-  })
-  ipcMain.handle('setData', async (_event, key, value) => {
-    store.set(key, value)
-  })
-  //窗口最小化
-  ipcMain.handle('minimize', () => {
-    mainWindow?.minimize()
-  })
-  //窗口关闭方法
-  ipcMain.handle('close', () => {
-    mainWindow?.hide()
-  })
+  allWindows.push(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
@@ -94,6 +67,39 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  //获取本地持久化数据
+  ipcMain.handle('getData', (_event, key) => {
+    return store.get(key)
+  })
+  //启动执行系统设置
+  ipcMain.handle('startWork', async () => {
+    const info = await store.get('settingData')
+    systemWork(info)
+  })
+  //更新系统设置业务
+  ipcMain.handle('upDataWork', async (_event, key, newValue) => {
+    upDataSystemWork(key, newValue)
+  })
+  //初始化App业务
+  ipcMain.handle('startRemind', (_event, index) => {
+    startCustomIntervalTask(index)
+  })
+  //更新App业务
+  ipcMain.handle('upDataAppWork', async (_event, index, key, newValue) => {
+    updataBusiness(index, key, newValue)
+  })
+  ipcMain.handle('setData', async (_event, key, value) => {
+    store.set(key, value)
+  })
+  //窗口最小化
+  ipcMain.handle('minimize', () => {
+    mainWindow?.minimize()
+  })
+  //窗口关闭方法
+  ipcMain.handle('close', () => {
+    mainWindow?.hide()
+  })
 }
 
 // This method will be called when Electron has finished
@@ -121,7 +127,8 @@ app.whenReady().then(() => {
         }
     },
     { label: '显示/隐藏窗口', click: () => toggleMainWindow() },
-    { label: '退出', click: () => app.quit() }
+    { label: '关于', role: 'about' },
+    { label: '退出', role: 'quit' }
   ])
   tray.setToolTip('星璘健康')
   tray.setContextMenu(contextMenu)
@@ -139,8 +146,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
   app.setAppUserModelId('星璘健康提醒')
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
 
@@ -162,3 +167,145 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
+
+const strengthContext: BrowserWindow[] = []
+export const creatStrength1 = async (info) => {
+  if (strengthContext.length > 0) {
+    return
+  }
+  // 获取主屏幕尺寸
+  const mainScreen = screen.getPrimaryDisplay()
+  const { width } = mainScreen.size
+
+  // 新建窗口，宽度和高度假设分别为800和600
+  const winWidth = 300
+  const winHeight = 100
+
+  // 计算窗口的居中位置
+  const x = Math.round((width - winWidth) / 2)
+  const Strength1Window = new BrowserWindow({
+    width: winWidth,
+    height: winHeight,
+    x: x,
+    y: 30,
+    show: false,
+    useContentSize: true,
+    autoHideMenuBar: true,
+    resizable: false,
+    frame: false,
+    maximizable: false,
+    titleBarStyle: 'hidden',
+    transparent: true,
+    alwaysOnTop: true, // 可选，让窗口总在最前面显示
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+  Strength1Window.on('ready-to-show', () => {
+    if (strengthContext.length == 0) {
+      Strength1Window?.show()
+      strengthContext.push(Strength1Window)
+    }
+    console.log('ready-to-show', strengthContext)
+  })
+  Strength1Window.webContents.on('did-frame-finish-load', () => {
+    // 确保窗口加载完成后再执行
+    console.log('did-frame-finish-load')
+    const windowToReceiveMessage = strengthContext[0]
+    if (!windowToReceiveMessage.isDestroyed()) {
+      windowToReceiveMessage.webContents.send('getStrength12Info', info)
+    }
+  })
+  // 关闭窗口清空窗口序列
+  Strength1Window.on('close', () => {
+    strengthContext.shift()
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    Strength1Window.loadURL(
+      process.env['ELECTRON_RENDERER_URL'] + '/#/strength1'
+    )
+  } else {
+    Strength1Window.loadFile(
+      join(__dirname, '../renderer/src/views/strength2.vue')
+    )
+  }
+}
+
+export const creatStrength2 = (info) => {
+  //已有窗口则退出方法 防止内存损耗
+  if (strengthContext.length > 0) {
+    return
+  }
+  const Strength2Window = new BrowserWindow({
+    width: 1920,
+    height: 1080,
+    show: false,
+    useContentSize: true,
+    autoHideMenuBar: true,
+    resizable: false,
+    frame: false,
+    maximizable: false,
+    titleBarStyle: 'hidden',
+    transparent: true,
+    alwaysOnTop: true, // 可选，让窗口总在最前面显示
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+  Strength2Window.on('ready-to-show', () => {
+    if (strengthContext.length == 0) {
+      Strength2Window?.show()
+      // Strength1Window.setFullScreen(true)
+      strengthContext.push(Strength2Window)
+    }
+  })
+
+  const window = allWindows[0]
+  if (!window.isDestroyed()) {
+    window.webContents.send('getStrength12Info', info)
+  }
+
+  // 关闭窗口清空窗口序列
+  Strength2Window.on('close', () => {
+    strengthContext.shift()
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    Strength2Window.loadURL(
+      process.env['ELECTRON_RENDERER_URL'] + '/#/strength2'
+    )
+  } else {
+    Strength2Window.loadFile(
+      join(__dirname, '../renderer/src/views/strength2.vue')
+    )
+  }
+}
+
+ipcMain.handle('closeStrength', () => {
+  strengthContext[0].close()
+})
+ipcMain.handle('creatStrength1', () => {
+  const info = {
+    img: 'F:\\electron-app\\eyes\\out\\main\\chunks\\yanjing-DmVcJN4F.png',
+    voiceValue:true,
+    title:'护眼提醒',
+    text:'请向 20 英尺（6米）外眺望 20 秒',
+    index:0
+  }
+  creatStrength1(info)
+})
+ipcMain.handle('creatStrength2', () => {
+  const info = {
+    img: 'F:\\electron-app\\eyes\\out\\main\\chunks\\yanjing-DmVcJN4F.png',
+    voiceValue:true,
+    title:'护眼提醒',
+    text:'请向 20 英尺（6米）外眺望 20 秒',
+    index:0
+  }
+  creatStrength2(info)
+})

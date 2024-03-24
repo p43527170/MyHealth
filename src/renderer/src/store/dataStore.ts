@@ -152,30 +152,24 @@ export const useDataStore = defineStore('dataStore', {
       } else {
         this.setting = settingData
       }
+      //执行系统设置
       await window.electron.ipcRenderer.invoke('startWork')
+      //执行提醒业务
+      this.startBusiness()
     },
     //修改系统设置数据
     async toggleSetting(key: string, newValue: boolean) {
-      console.log('修改系统设置')
       this.$patch((state) => {
         state.setting[key] = newValue
       })
     },
-    //系统设置数据持久化-更新业务
-    async updateSetting(key, newValue) {
-      await window.electron.ipcRenderer.invoke(
-        'setData',
-        `settingData.${key}`,
-        newValue
-      )
-      await window.electron.ipcRenderer.invoke('upDataWork', key, newValue)
-    },
-    //开关appData提醒-更新持久化数据
+    //开关appData提醒
     async updateSwitch(index: number, value: boolean) {
       this.appData[index].switch = value
+      //更新持久化数据
       this.updateAppData(index, 'switch', value)
     },
-    //修改appData提醒详情-更新持久化数据
+    //修改appData提醒详情
     async updateReminder(
       index: number,
       label: string,
@@ -184,6 +178,7 @@ export const useDataStore = defineStore('dataStore', {
       this.$patch((state) => {
         state.appData[index][label] = value
       })
+      //更新持久化数据
       this.updateAppData(index, label, value)
     },
     //更新appData持久化数据-更新业务
@@ -203,6 +198,16 @@ export const useDataStore = defineStore('dataStore', {
         key,
         newValue
       )
+    },
+    //三个主要提醒任务创建
+    startBusiness() {
+      for (let i = 0; i < 3; i++) {
+        const info = this.appData[i]
+        const { switch: isSwitched } = info
+        if (isSwitched) {
+          window.electron.ipcRenderer.invoke('startRemind', i)
+        }
+      }
     }
   }
 })
