@@ -94,7 +94,7 @@ export const startCustomIntervalTask = async (index: number) => {
   const appData = (await store.get('appData')) as []
   const info = appData[index]
   const { title, url, modeValue, voiceValue, strengthValue } = info
-
+  console.log('startCustomIntervalTaskstartCustomIntervalTaskstartCustomIntervalTask');
   // 获取模式
   const mode = reminderSettings[url]
   const modeType = mode[modeValue] as { time: number; text: string }
@@ -115,7 +115,9 @@ export const startCustomIntervalTask = async (index: number) => {
     modeType.text,
     title,
     voiceValue,
-    index
+    index,
+    url,
+    modeValue
   )
 }
 
@@ -131,7 +133,9 @@ const strengthJudge = (
   text: string,
   title: string,
   voiceValue: boolean,
-  index: number
+  index: number,
+  url,
+  modeValue
 ) => {
   if (strength === 0) {
     const notification = new Notification({
@@ -155,25 +159,48 @@ const strengthJudge = (
     })
     jobs[index] = job
   } else if (strength === 1) {
-    const imgs = [yanjing, jiuzuo, heshui, qita]
-    const info = {
-      img: imgs[index],
-      voiceValue,
-      title,
-      text,
-      index
-    }
-    creatStrength1(info)
+    const job = schedule.scheduleJob(time, function () {
+      const info = {
+        voiceValue,
+        title,
+        url,
+        index,
+        modeValue
+      }
+      //执行任务
+      console.log('strengthJudgestrengthJudgestrengthJudge');
+      creatStrength1(info)
+      if (voiceValue) {
+        const window = allWindows[0]
+        if (!window.isDestroyed()) {
+          window.webContents.send('play-audio-from-main-process')
+        }
+      }
+      // 任务执行完后，重新安排下一次执行
+      startCustomIntervalTask(index)
+    })
+    jobs[index] = job
   } else if (strength === 2) {
-    const imgs = [yanjing, jiuzuo, heshui, qita]
-    const info = {
-      img: imgs[index],
-      voiceValue,
-      title,
-      text,
-      index
-    }
-    creatStrength2(info)
+    const job = schedule.scheduleJob(time, function () {
+      const info = {
+        voiceValue,
+        title,
+        url,
+        index,
+      modeValue
+      }
+      //执行任务
+      creatStrength2(info)
+      if (voiceValue) {
+        const window = allWindows[0]
+        if (!window.isDestroyed()) {
+          window.webContents.send('play-audio-from-main-process')
+        }
+      }
+      // 任务执行完后，重新安排下一次执行
+      startCustomIntervalTask(index)
+    })
+    jobs[index] = job
   } else {
     console.log('strengthJudge error')
   }

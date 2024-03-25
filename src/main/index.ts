@@ -169,17 +169,18 @@ app.on('window-all-closed', () => {
 // code. You can also put them in separate files and require them here.
 
 const strengthContext: BrowserWindow[] = []
-export const creatStrength1 = async (info) => {
+export const creatStrength1 = (info) => {
   if (strengthContext.length > 0) {
     return
   }
+  console.log('new BrowserWindow')
   // 获取主屏幕尺寸
   const mainScreen = screen.getPrimaryDisplay()
   const { width } = mainScreen.size
 
   // 新建窗口，宽度和高度假设分别为800和600
-  const winWidth = 300
-  const winHeight = 100
+  const winWidth = 340
+  const winHeight = 90
 
   // 计算窗口的居中位置
   const x = Math.round((width - winWidth) / 2)
@@ -221,6 +222,7 @@ export const creatStrength1 = async (info) => {
   // 关闭窗口清空窗口序列
   Strength1Window.on('close', () => {
     strengthContext.shift()
+    console.log('close', strengthContext)
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -291,20 +293,18 @@ ipcMain.handle('closeStrength', () => {
 })
 ipcMain.handle('creatStrength1', () => {
   const info = {
-    img: 'F:\\electron-app\\eyes\\out\\main\\chunks\\yanjing-DmVcJN4F.png',
     voiceValue:true,
     title:'护眼提醒',
-    text:'请向 20 英尺（6米）外眺望 20 秒',
+    url:'yanjing',
     index:0
   }
   creatStrength1(info)
 })
 ipcMain.handle('creatStrength2', () => {
   const info = {
-    img: 'F:\\electron-app\\eyes\\out\\main\\chunks\\yanjing-DmVcJN4F.png',
     voiceValue:true,
     title:'护眼提醒',
-    text:'请向 20 英尺（6米）外眺望 20 秒',
+    url:'yanjing',
     index:0
   }
   creatStrength2(info)

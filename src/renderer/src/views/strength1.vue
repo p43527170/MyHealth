@@ -1,21 +1,34 @@
 <template>
   <div class="strengthBackground" @dblclick="close">
-    <div style="text-align: center">
-      <img :src="info.img" alt="" />
-      <span>{{ info.title }}</span>
-      <h4 style="color: #ffffff">请休息 {{ num }} 秒</h4>
-      <p>双击鼠标左键关闭提示框</p>
+    <div class="image"><img :src="selectImage" alt="" /></div>
+    <div class="text">
+      <h4>{{ info.title }}</h4>
+      <h5>{{ text }} <span v-if="index === 0 || index === 1"> {{ num }} 秒</span></h5>
+      <!-- <h6>双击关闭</h6> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import yanjing from '../image/yanjing.png'
+import jiuzuo from '../image/jiuzuo.png'
+import heshui from '../image/heshui.png'
+import qita from '../image/qita.png'
 
+const images = [yanjing, jiuzuo, heshui, qita]
+const selectImage = ref('')
 const info = ref({})
+const text = ref('')
+const num = ref(20)
+const index = ref(0)
 window.electron.ipcRenderer.on('getStrength12Info', (_event, value) => {
   info.value = value
-  console.log(info.value.img)
+  selectImage.value = images[value.index]
+  text.value = reminderSettings[value.url][value.modeValue].text
+  num.value = reminderSettings[value.url][value.modeValue].time
+  index.value = value.index
+  console.log(text.value)
 })
 
 const close = () => {
@@ -27,7 +40,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
     close()
   }
 }
-const num = ref(20)
 let intervalId
 // 每秒减少1的定时器函数
 const decreaseNum = () => {
@@ -35,7 +47,7 @@ const decreaseNum = () => {
   // 当num值为0时，清除定时器
   if (num.value === 0) {
     clearInterval(intervalId)
-    close()
+    // close()
   }
 }
 // 在组件挂载后添加事件监听
@@ -53,42 +65,42 @@ const reminderSettings = {
   yanjing: [
     {
       title: '20-20-20 护眼法',
-      text: '请向 20 英尺（6米）外眺望 20 秒',
-      time: 1
+      text: `请向 20 英尺（6米）外眺望`,
+      time: 20
     },
     {
       title: '一小时护眼法',
-      text: '请闭眼或眺望远方 1 ~ 5 分钟',
-      time: 1
+      text: `请闭眼或眺望远方`,
+      time: 60
     }
   ],
   jiuzuo: [
     {
       title: '一小时久坐提醒',
-      text: '一小时啦，请起身活动 1 分钟',
-      time: 1
+      text: `一小时啦，请起身活动一下`,
+      time: 30
     },
     {
       title: '两小时久坐提醒',
-      text: '两小时啦，请起身活动 1 分钟',
-      time: 120
+      text: `两小时啦，请起身活动一下`,
+      time: 30
     }
   ],
   heshui: [
     {
       title: '半小时喝水提醒',
       text: '半小时啦，记得喝水',
-      time: 30
+      time: 6
     },
     {
       title: '一小时久坐提醒',
       text: '一小时啦，记得喝水',
-      time: 1
+      time: 6
     },
     {
       title: '两小时久坐提醒',
-      text: '每隔 120 分钟，提醒喝水 1 次',
-      time: 120
+      text: '两小时啦，记得喝水',
+      time: 6
     }
   ]
 }
@@ -113,6 +125,27 @@ const reminderSettings = {
   animation-fill-mode: forwards;
   opacity: 0;
   animation-name: fadeIn;
+  .image{
+    background-color: rgb(255 255 255 / 90%);
+    width: 48px;
+    border-radius: 20px;
+    padding: 4px;
+    img{
+      width: 100%;
+      display: block;
+    }
+  }
+  .text{
+    color: #ffffff;
+    text-align: left;
+    h4{
+      font-size: 20px;
+      line-height: 1.4;
+    }
+    h5{
+      font-size: 16px;
+    }
+  }
 }
 @keyframes fadeIn {
   0% {
