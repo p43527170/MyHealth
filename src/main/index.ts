@@ -169,10 +169,12 @@ app.on('window-all-closed', () => {
 // code. You can also put them in separate files and require them here.
 
 const strengthContext: BrowserWindow[] = []
+let isWindowOpening = false
 export const creatStrength1 = (info) => {
-  if (strengthContext.length > 0) {
+  if (isWindowOpening) {
     return
   }
+  isWindowOpening = true
   console.log('new BrowserWindow')
   // 获取主屏幕尺寸
   const mainScreen = screen.getPrimaryDisplay()
@@ -209,7 +211,7 @@ export const creatStrength1 = (info) => {
       Strength1Window?.show()
       strengthContext.push(Strength1Window)
     }
-    console.log('ready-to-show', strengthContext)
+    console.log('ready-to-show')
   })
   Strength1Window.webContents.on('did-frame-finish-load', () => {
     // 确保窗口加载完成后再执行
@@ -222,7 +224,8 @@ export const creatStrength1 = (info) => {
   // 关闭窗口清空窗口序列
   Strength1Window.on('close', () => {
     strengthContext.shift()
-    console.log('close', strengthContext)
+    isWindowOpening = false
+    console.log('close')
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -290,22 +293,4 @@ export const creatStrength2 = (info) => {
 
 ipcMain.handle('closeStrength', () => {
   strengthContext[0].close()
-})
-ipcMain.handle('creatStrength1', () => {
-  const info = {
-    voiceValue:true,
-    title:'护眼提醒',
-    url:'yanjing',
-    index:0
-  }
-  creatStrength1(info)
-})
-ipcMain.handle('creatStrength2', () => {
-  const info = {
-    voiceValue:true,
-    title:'护眼提醒',
-    url:'yanjing',
-    index:0
-  }
-  creatStrength2(info)
 })

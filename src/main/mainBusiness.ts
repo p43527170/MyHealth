@@ -29,6 +29,7 @@ export const updataBusiness = (
 const methods = {
   switchUpdata: (index: number, newValue: boolean) => {
     if (newValue) {
+      console.log('change');
       startCustomIntervalTask(index)
     } else {
       jobs[index].cancel()
@@ -94,11 +95,11 @@ export const startCustomIntervalTask = async (index: number) => {
   const appData = (await store.get('appData')) as []
   const info = appData[index]
   const { title, url, modeValue, voiceValue, strengthValue } = info
-  console.log('startCustomIntervalTaskstartCustomIntervalTaskstartCustomIntervalTask');
+  console.log('startCustomIntervalTask 1111111111')
   // 获取模式
   const mode = reminderSettings[url]
   const modeType = mode[modeValue] as { time: number; text: string }
-  // 计算本模式循环时间intervalInMinutes
+  // 计算本模式的循环间隔intervalInMinutes
   const intervalInMinutes = modeType.time //时间间隔分钟
   const now = new Date()
   const nextExecution = new Date(
@@ -108,7 +109,7 @@ export const startCustomIntervalTask = async (index: number) => {
       now.getSeconds() * 1000 -
       now.getMilliseconds()
   )
-  //获取强度
+  //计算提醒强度
   strengthJudge(
     strengthValue,
     nextExecution,
@@ -138,6 +139,7 @@ const strengthJudge = (
   modeValue
 ) => {
   if (strength === 0) {
+    clearJob(index)
     const notification = new Notification({
       title: title,
       body: text,
@@ -168,7 +170,7 @@ const strengthJudge = (
         modeValue
       }
       //执行任务
-      console.log('strengthJudgestrengthJudgestrengthJudge');
+      console.log('strengthJudge 222222222222222222222');
       creatStrength1(info)
       if (voiceValue) {
         const window = allWindows[0]
@@ -203,5 +205,13 @@ const strengthJudge = (
     jobs[index] = job
   } else {
     console.log('strengthJudge error')
+  }
+}
+// 增加一个清除已有定时任务的方法
+const clearJob = (index: number) => {
+  const job = jobs[index]
+  if (job) {
+    job.cancel()
+    delete jobs[index]
   }
 }

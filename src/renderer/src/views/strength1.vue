@@ -115,8 +115,8 @@ const reminderSettings = {
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgb(14 136 109 / 70%);
-  border-radius: 8px;
+  background: rgb(22 170 137 / 70%);
+  border-radius: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
