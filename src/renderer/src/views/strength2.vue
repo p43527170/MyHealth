@@ -1,14 +1,35 @@
 <template>
   <div class="strengthBackground" @dblclick="close">
     <div style="text-align: center">
-      <h1 style="color: #ffffff">请休息 {{ num }} 秒</h1>
-      <p>若想提前结束, 请双击鼠标左键或按ESC</p>
+      <div class="image"><img :src="selectImage" alt="" /></div>
+      <h1 style="color: #ffffff">{{ info.title }}</h1>
+      <h3>{{ text }} <span v-if="index === 0 || index === 1"> {{ num }} 秒</span></h3>
+      <span class="tip">（双击鼠标或按ESC键关闭）</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue'
+import yanjing from '../image/yanjing.png'
+import jiuzuo from '../image/jiuzuo.png'
+import heshui from '../image/heshui.png'
+import qita from '../image/qita.png'
+import { reminderSettings } from './publicData'
+
+const images = [yanjing, jiuzuo, heshui, qita]
+const selectImage = ref('')
+const info = ref({ title: '' })
+const text = ref('')
+const num = ref(20)
+const index = ref(0)
+window.electron.ipcRenderer.on('getStrength12Info', (_event, value) => {
+  info.value = value
+  selectImage.value = images[value.index]
+  text.value = reminderSettings[value.url][value.modeValue].text
+  num.value = reminderSettings[value.url][value.modeValue].time
+  index.value = value.index
+})
 const close = () => {
   window.electron.ipcRenderer.invoke('closeStrength')
 }
@@ -18,7 +39,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
     close()
   }
 }
-const num = ref(20)
 let intervalId
 // 每秒减少1的定时器函数
 const decreaseNum = () => {
@@ -59,6 +79,21 @@ onUnmounted(() => {
   animation-fill-mode: forwards;
   opacity: 0;
   animation-name: fadeIn;
+  .image {
+    background-color: rgb(255 255 255 / 90%);
+    width: 50px;
+    border-radius: 20px;
+    padding: 4px;
+    margin: 0 auto;
+
+    img {
+      width: 100%;
+      display: block;
+    }
+  }
+  .tip {
+    font-size: 12px;
+  }
 }
 @keyframes fadeIn {
   0% {

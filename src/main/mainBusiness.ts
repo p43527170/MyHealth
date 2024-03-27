@@ -68,14 +68,14 @@ const reminderSettings = {
     {
       title: '两小时久坐提醒',
       text: '两小时啦，请起身活动 1 分钟',
-      time: 120
+      time: 1
     }
   ],
   heshui: [
     {
       title: '半小时喝水提醒',
       text: '半小时啦，记得喝水',
-      time: 30
+      time: 1
     },
     {
       title: '一小时久坐提醒',
@@ -85,7 +85,7 @@ const reminderSettings = {
     {
       title: '两小时久坐提醒',
       text: '每隔 120 分钟，提醒喝水 1 次',
-      time: 120
+      time: 1
     }
   ]
 }
@@ -95,10 +95,10 @@ export const startCustomIntervalTask = async (index: number) => {
   const appData = (await store.get('appData')) as []
   const info = appData[index]
   const { title, url, modeValue, voiceValue, strengthValue } = info
-  console.log('startCustomIntervalTask 1111111111')
   // 获取模式
   const mode = reminderSettings[url]
   const modeType = mode[modeValue] as { time: number; text: string }
+  console.log('start', url, 'strengthValue = ' + strengthValue, 'index = ' + index)
   // 计算本模式的循环间隔intervalInMinutes
   const intervalInMinutes = modeType.time //时间间隔分钟
   const now = new Date()
@@ -138,8 +138,9 @@ const strengthJudge = (
   url,
   modeValue
 ) => {
+  console.log('strength', url, 'strengthValue = ' + strength, 'index = ' + index)
+  clearJob(index)
   if (strength === 0) {
-    clearJob(index)
     const notification = new Notification({
       title: title,
       body: text,
@@ -170,7 +171,6 @@ const strengthJudge = (
         modeValue
       }
       //执行任务
-      console.log('strengthJudge 222222222222222222222');
       creatStrength1(info)
       if (voiceValue) {
         const window = allWindows[0]
@@ -189,7 +189,7 @@ const strengthJudge = (
         title,
         url,
         index,
-      modeValue
+        modeValue
       }
       //执行任务
       creatStrength2(info)

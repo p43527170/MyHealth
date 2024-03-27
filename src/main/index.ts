@@ -72,13 +72,15 @@ function createWindow(): void {
   ipcMain.handle('getData', (_event, key) => {
     return store.get(key)
   })
-  //启动执行系统设置
+  //启动执行系统设置6
   ipcMain.handle('startWork', async () => {
     const info = await store.get('settingData')
+    console.log('startWork')
     systemWork(info)
   })
   //更新系统设置业务
   ipcMain.handle('upDataWork', async (_event, key, newValue) => {
+    console.log('upDataWork')
     upDataSystemWork(key, newValue)
   })
   //初始化App业务
@@ -175,14 +177,13 @@ export const creatStrength1 = (info) => {
     return
   }
   isWindowOpening = true
-  console.log('new BrowserWindow')
   // 获取主屏幕尺寸
   const mainScreen = screen.getPrimaryDisplay()
   const { width } = mainScreen.size
 
   // 新建窗口，宽度和高度假设分别为800和600
   const winWidth = 340
-  const winHeight = 90
+  const winHeight = 110
 
   // 计算窗口的居中位置
   const x = Math.round((width - winWidth) / 2)
@@ -211,11 +212,9 @@ export const creatStrength1 = (info) => {
       Strength1Window?.show()
       strengthContext.push(Strength1Window)
     }
-    console.log('ready-to-show')
   })
   Strength1Window.webContents.on('did-frame-finish-load', () => {
     // 确保窗口加载完成后再执行
-    console.log('did-frame-finish-load')
     const windowToReceiveMessage = strengthContext[0]
     if (!windowToReceiveMessage.isDestroyed()) {
       windowToReceiveMessage.webContents.send('getStrength12Info', info)
@@ -255,7 +254,7 @@ export const creatStrength2 = (info) => {
     maximizable: false,
     titleBarStyle: 'hidden',
     transparent: true,
-    alwaysOnTop: true, // 可选，让窗口总在最前面显示
+    // alwaysOnTop: true, // 可选，让窗口总在最前面显示
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -265,21 +264,21 @@ export const creatStrength2 = (info) => {
   Strength2Window.on('ready-to-show', () => {
     if (strengthContext.length == 0) {
       Strength2Window?.show()
-      // Strength1Window.setFullScreen(true)
       strengthContext.push(Strength2Window)
     }
   })
-
-  const window = allWindows[0]
-  if (!window.isDestroyed()) {
-    window.webContents.send('getStrength12Info', info)
-  }
-
+  // 确保窗口加载完成后再执行传参
+  Strength2Window.webContents.on('did-frame-finish-load', () => {
+    const windowToReceiveMessage = strengthContext[0]
+    if (!windowToReceiveMessage.isDestroyed()) {
+      windowToReceiveMessage.webContents.send('getStrength12Info', info)
+    }
+  })
   // 关闭窗口清空窗口序列
   Strength2Window.on('close', () => {
     strengthContext.shift()
+    isWindowOpening = false
   })
-
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     Strength2Window.loadURL(
       process.env['ELECTRON_RENDERER_URL'] + '/#/strength2'
@@ -292,5 +291,7 @@ export const creatStrength2 = (info) => {
 }
 
 ipcMain.handle('closeStrength', () => {
-  strengthContext[0].close()
+  if (strengthContext.length > 0) {
+    strengthContext[0].close()
+  }
 })

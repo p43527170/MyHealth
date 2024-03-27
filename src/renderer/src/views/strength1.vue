@@ -1,11 +1,15 @@
 <template>
   <div class="strengthBackground" @dblclick="close">
-    <div class="image"><img :src="selectImage" alt="" /></div>
-    <div class="text">
-      <h4>{{ info.title }}</h4>
-      <h5>{{ text }} <span v-if="index === 0 || index === 1"> {{ num }} 秒</span></h5>
-      <!-- <h6>双击关闭</h6> -->
+    <div class="strengthCtn">
+      <div class="image">
+        <img :src="selectImage" alt="" />
+      </div>
+      <div class="text">
+        <h4>{{ info.title }}</h4>
+        <h5>{{ text }} <span v-if="index === 0 || index === 1"> {{ num }} 秒</span></h5>
+      </div>
     </div>
+    <span class="tip">（双击或按ESC键关闭）</span>
   </div>
 </template>
 
@@ -15,10 +19,11 @@ import yanjing from '../image/yanjing.png'
 import jiuzuo from '../image/jiuzuo.png'
 import heshui from '../image/heshui.png'
 import qita from '../image/qita.png'
+import { reminderSettings } from './publicData'
 
 const images = [yanjing, jiuzuo, heshui, qita]
 const selectImage = ref('')
-const info = ref({})
+const info = ref({ title: '' })
 const text = ref('')
 const num = ref(20)
 const index = ref(0)
@@ -28,7 +33,6 @@ window.electron.ipcRenderer.on('getStrength12Info', (_event, value) => {
   text.value = reminderSettings[value.url][value.modeValue].text
   num.value = reminderSettings[value.url][value.modeValue].time
   index.value = value.index
-  console.log(text.value)
 })
 
 const close = () => {
@@ -37,7 +41,7 @@ const close = () => {
 // 添加事件监听器
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
-    close()
+    // close()
   }
 }
 let intervalId
@@ -60,50 +64,6 @@ onUnmounted(() => {
   clearInterval(intervalId)
   window.removeEventListener('keydown', handleKeyDown)
 })
-
-const reminderSettings = {
-  yanjing: [
-    {
-      title: '20-20-20 护眼法',
-      text: `请向 20 英尺（6米）外眺望`,
-      time: 20
-    },
-    {
-      title: '一小时护眼法',
-      text: `请闭眼或眺望远方`,
-      time: 60
-    }
-  ],
-  jiuzuo: [
-    {
-      title: '一小时久坐提醒',
-      text: `一小时啦，请起身活动一下`,
-      time: 30
-    },
-    {
-      title: '两小时久坐提醒',
-      text: `两小时啦，请起身活动一下`,
-      time: 30
-    }
-  ],
-  heshui: [
-    {
-      title: '半小时喝水提醒',
-      text: '半小时啦，记得喝水',
-      time: 6
-    },
-    {
-      title: '一小时久坐提醒',
-      text: '一小时啦，记得喝水',
-      time: 6
-    },
-    {
-      title: '两小时久坐提醒',
-      text: '两小时啦，记得喝水',
-      time: 6
-    }
-  ]
-}
 </script>
 
 <style scoped lang="scss">
@@ -117,36 +77,54 @@ const reminderSettings = {
   bottom: 0;
   background: rgb(22 170 137 / 70%);
   border-radius: 6px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   animation-duration: 1.5s;
   animation-timing-function: ease-out;
   animation-fill-mode: forwards;
   opacity: 0;
   animation-name: fadeIn;
-  .image{
-    background-color: rgb(255 255 255 / 90%);
-    width: 48px;
-    border-radius: 20px;
-    padding: 4px;
-    img{
-      width: 100%;
-      display: block;
+
+  .strengthCtn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+
+    .image {
+      background-color: rgb(255 255 255 / 90%);
+      width: 48px;
+      border-radius: 20px;
+      padding: 4px;
+
+      img {
+        width: 100%;
+        display: block;
+      }
+    }
+
+    .text {
+      color: #ffffff;
+      text-align: left;
+      padding: 4px 0;
+
+      h4 {
+        font-size: 20px;
+        line-height: 1.4;
+      }
+
+      h5 {
+        font-size: 16px;
+      }
     }
   }
-  .text{
-    color: #ffffff;
-    text-align: left;
-    h4{
-      font-size: 20px;
-      line-height: 1.4;
-    }
-    h5{
-      font-size: 16px;
-    }
+  .tip {
+    font-size: 12px;
+    display: block;
+    text-align: center;
+    line-height: 20px;
   }
 }
+
 @keyframes fadeIn {
   0% {
     opacity: 0;
