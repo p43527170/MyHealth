@@ -173,6 +173,7 @@ app.on('window-all-closed', () => {
 const strengthContext: BrowserWindow[] = []
 let isWindowOpening = false
 export const creatStrength1 = (info) => {
+  console.log('creat1', info.url, info.index)
   if (isWindowOpening) {
     return
   }
@@ -240,6 +241,7 @@ export const creatStrength1 = (info) => {
 
 export const creatStrength2 = (info) => {
   //已有窗口则退出方法 防止内存损耗
+  console.log('creat2', info.url, info.index)
   if (strengthContext.length > 0) {
     return
   }

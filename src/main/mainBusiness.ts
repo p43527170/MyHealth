@@ -29,7 +29,7 @@ export const updataBusiness = (
 const methods = {
   switchUpdata: (index: number, newValue: boolean) => {
     if (newValue) {
-      console.log('change');
+      console.log('change', index, newValue);
       startCustomIntervalTask(index)
     } else {
       jobs[index].cancel()
