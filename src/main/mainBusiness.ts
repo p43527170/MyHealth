@@ -102,13 +102,7 @@ export const startCustomIntervalTask = async (index: number) => {
   // 计算本模式的循环间隔intervalInMinutes
   const intervalInMinutes = modeType.time //时间间隔分钟
   const now = new Date()
-  const nextExecution = new Date(
-    now.getTime() +
-      intervalInMinutes * 60 * 1000 -
-      (now.getMinutes() % intervalInMinutes) * 60 * 1000 -
-      now.getSeconds() * 1000 -
-      now.getMilliseconds()
-  )
+  const nextExecution = new Date(now.getTime() + intervalInMinutes * 60 * 1000);
   //计算提醒强度
   strengthJudge(
     strengthValue,
