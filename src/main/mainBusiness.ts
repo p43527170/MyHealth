@@ -6,6 +6,7 @@ import yanjing from '../../src/renderer/src/image/yanjing.png?asset'
 import jiuzuo from '../../src/renderer/src/image/jiuzuo.png?asset'
 import heshui from '../../src/renderer/src/image/heshui.png?asset'
 import qita from '../../src/renderer/src/image/qita.png?asset'
+import logo from '../../src/renderer/src/image/logobai.png?asset'
 import { allWindows, creatStrength1, creatStrength2 } from './index'
 
 const myImage = {
@@ -29,7 +30,6 @@ export const updataBusiness = (
 const methods = {
   switchUpdata: (index: number, newValue: boolean) => {
     if (newValue) {
-      console.log('change', index, newValue);
       startCustomIntervalTask(index)
     } else {
       jobs[index].cancel()
@@ -51,41 +51,41 @@ const reminderSettings = {
     {
       title: '20-20-20 护眼法',
       text: '请向 20 英尺（6米）外眺望 20 秒',
-      time: 1
+      time: 20
     },
     {
       title: '一小时护眼法',
       text: '请闭眼或眺望远方 1 ~ 5 分钟',
-      time: 1
+      time: 60
     }
   ],
   jiuzuo: [
     {
       title: '一小时久坐提醒',
       text: '一小时啦，请起身活动 1 分钟',
-      time: 1
+      time: 60
     },
     {
       title: '两小时久坐提醒',
       text: '两小时啦，请起身活动 1 分钟',
-      time: 1
+      time: 120
     }
   ],
   heshui: [
     {
       title: '半小时喝水提醒',
       text: '半小时啦，记得喝水',
-      time: 1
+      time: 30
     },
     {
-      title: '一小时久坐提醒',
+      title: '一小时喝水提醒',
       text: '一小时啦，记得喝水',
-      time: 1
+      time: 60
     },
     {
-      title: '两小时久坐提醒',
+      title: '两小时喝水提醒',
       text: '每隔 120 分钟，提醒喝水 1 次',
-      time: 1
+      time: 120
     }
   ]
 }
@@ -98,11 +98,10 @@ export const startCustomIntervalTask = async (index: number) => {
   // 获取模式
   const mode = reminderSettings[url]
   const modeType = mode[modeValue] as { time: number; text: string }
-  console.log('start', url, 'strengthValue = ' + strengthValue, 'index = ' + index)
   // 计算本模式的循环间隔intervalInMinutes
   const intervalInMinutes = modeType.time //时间间隔分钟
   const now = new Date()
-  const nextExecution = new Date(now.getTime() + intervalInMinutes * 60 * 1000);
+  const nextExecution = new Date(now.getTime() + intervalInMinutes * 60 * 1000)
   //计算提醒强度
   strengthJudge(
     strengthValue,
@@ -132,7 +131,6 @@ const strengthJudge = (
   url,
   modeValue
 ) => {
-  console.log('strength', url, 'strengthValue = ' + strength, 'index = ' + index)
   clearJob(index)
   if (strength === 0) {
     const notification = new Notification({
@@ -208,4 +206,20 @@ const clearJob = (index: number) => {
     job.cancel()
     delete jobs[index]
   }
+}
+//重置提醒任务
+export const resetJobs = () => {
+  for (const key in jobs) {
+    const job = jobs[key]
+    job.cancel()
+    methods.switchUpdata(parseInt(key), true)
+  }
+  const notification = new Notification({
+    title: '重置提醒时间',
+    body: '所有提醒将重新开始计时',
+    silent: true, // 禁止系统音
+    timeoutType: 'default', //default || never
+    icon: nativeImage.createFromPath(logo)
+  })
+  notification.show()
 }

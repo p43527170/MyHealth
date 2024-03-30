@@ -6,7 +6,9 @@ import {
   Tray,
   nativeImage,
   Menu,
-  screen
+  screen,
+  session,
+  Notification
 } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -14,7 +16,7 @@ import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
 import { systemWork, upDataSystemWork } from './system'
-import { startCustomIntervalTask, updataBusiness } from './mainBusiness'
+import { startCustomIntervalTask, updataBusiness, resetJobs } from './mainBusiness'
 const store = new Store()
 export const allWindows: BrowserWindow[] = []
 let mainWindow: Electron.BrowserWindow | null = null
@@ -75,12 +77,10 @@ function createWindow(): void {
   //启动执行系统设置6
   ipcMain.handle('startWork', async () => {
     const info = await store.get('settingData')
-    console.log('startWork')
     systemWork(info)
   })
   //更新系统设置业务
   ipcMain.handle('upDataWork', async (_event, key, newValue) => {
-    console.log('upDataWork')
     upDataSystemWork(key, newValue)
   })
   //初始化App业务
@@ -116,17 +116,16 @@ app.whenReady().then(() => {
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '设置',
-      click: () =>
-        function () {
-          console.log('设置')
-        }
+      click: () => {
+        mainWindow?.show()
+        allWindows[0].webContents.send('toSetting')
+      }
     },
     {
       label: '重置提醒时间',
-      click: () =>
-        function () {
-          console.log('重置提醒时间')
-        }
+      click: () => {
+        resetJobs()
+      }
     },
     { label: '显示/隐藏窗口', click: () => toggleMainWindow() },
     { label: '关于', role: 'about' },
@@ -170,14 +169,13 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 
-const strengthContext: BrowserWindow[] = []
-let isWindowOpening = false
-export const creatStrength1 = (info) => {
-  console.log('creat1', info.url, info.index)
-  if (isWindowOpening) {
+const strengthContext = {}
+let strengthContextNum = -3
+export const creatStrength1 = async (info) => {
+  if (strengthContext[info.url]) {
     return
   }
-  isWindowOpening = true
+  strengthContextNum = strengthContextNum + 4
   // 获取主屏幕尺寸
   const mainScreen = screen.getPrimaryDisplay()
   const { width } = mainScreen.size
@@ -192,7 +190,7 @@ export const creatStrength1 = (info) => {
     width: winWidth,
     height: winHeight,
     x: x,
-    y: 30,
+    y: 30 * strengthContextNum,
     show: false,
     useContentSize: true,
     autoHideMenuBar: true,
@@ -208,41 +206,38 @@ export const creatStrength1 = (info) => {
       sandbox: false
     }
   })
-  Strength1Window.on('ready-to-show', () => {
-    if (strengthContext.length == 0) {
-      Strength1Window?.show()
-      strengthContext.push(Strength1Window)
-    }
-  })
-  Strength1Window.webContents.on('did-frame-finish-load', () => {
+  Strength1Window.webContents.on('did-finish-load', () => {
     // 确保窗口加载完成后再执行
-    const windowToReceiveMessage = strengthContext[0]
-    if (!windowToReceiveMessage.isDestroyed()) {
-      windowToReceiveMessage.webContents.send('getStrength12Info', info)
+    console.log('did-finish-load', info)
+    if (!strengthContext[info.url]) {
+      strengthContext[info.url] = Strength1Window
+      const windowToReceiveMessage = strengthContext[info.url]
+      if (!windowToReceiveMessage.isDestroyed()) {
+        setTimeout(() => {
+          windowToReceiveMessage.webContents.send('routerStrength', '/strength1', info)
+          Strength1Window?.show()
+        }, 200)
+      }
     }
   })
   // 关闭窗口清空窗口序列
   Strength1Window.on('close', () => {
-    strengthContext.shift()
-    isWindowOpening = false
-    console.log('close')
+    strengthContext[info.url] = null
+    strengthContextNum = strengthContextNum - 4
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    Strength1Window.loadURL(
+    await Strength1Window.loadURL(
       process.env['ELECTRON_RENDERER_URL'] + '/#/strength1'
     )
   } else {
-    Strength1Window.loadFile(
-      join(__dirname, '../renderer/src/views/strength2.vue')
-    )
+    await Strength1Window.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
-export const creatStrength2 = (info) => {
+export const creatStrength2 = async (info) => {
   //已有窗口则退出方法 防止内存损耗
-  console.log('creat2', info.url, info.index)
-  if (strengthContext.length > 0) {
+  if (strengthContext[info.url]) {
     return
   }
   const Strength2Window = new BrowserWindow({
@@ -256,44 +251,68 @@ export const creatStrength2 = (info) => {
     maximizable: false,
     titleBarStyle: 'hidden',
     transparent: true,
-    // alwaysOnTop: true, // 可选，让窗口总在最前面显示
+    alwaysOnTop: true, // 可选，让窗口总在最前面显示
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
-  Strength2Window.on('ready-to-show', () => {
-    if (strengthContext.length == 0) {
-      Strength2Window?.show()
-      strengthContext.push(Strength2Window)
-    }
-  })
   // 确保窗口加载完成后再执行传参
-  Strength2Window.webContents.on('did-frame-finish-load', () => {
-    const windowToReceiveMessage = strengthContext[0]
-    if (!windowToReceiveMessage.isDestroyed()) {
-      windowToReceiveMessage.webContents.send('getStrength12Info', info)
+  Strength2Window.webContents.on('did-finish-load', () => {
+    // 确保窗口加载完成后再执行
+    if (!strengthContext[info.url]) {
+      strengthContext[info.url] = Strength2Window
+      const windowToReceiveMessage = strengthContext[info.url]
+      if (!windowToReceiveMessage.isDestroyed()) {
+        setTimeout(() => {
+          windowToReceiveMessage.webContents.send('routerStrength', '/strength2', info)
+          Strength2Window.show()
+        }, 200)
+      }
     }
   })
   // 关闭窗口清空窗口序列
   Strength2Window.on('close', () => {
-    strengthContext.shift()
-    isWindowOpening = false
+    strengthContext[info.url] = null
   })
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    Strength2Window.loadURL(
+    await Strength2Window.loadURL(
       process.env['ELECTRON_RENDERER_URL'] + '/#/strength2'
     )
   } else {
-    Strength2Window.loadFile(
-      join(__dirname, '../renderer/src/views/strength2.vue')
-    )
+    await Strength2Window.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
-ipcMain.handle('closeStrength', () => {
-  if (strengthContext.length > 0) {
-    strengthContext[0].close()
+ipcMain.handle('closeStrength', (_event, name) => {
+  if (strengthContext[name]) {
+    strengthContext[name].close()
   }
+})
+ipcMain.handle('clear-all-data-and-cache', () => {
+  session.defaultSession.clearCache()
+  // // 清理用户数据文件夹（Node.js v12.10.0+）
+  const userDataPath = app.getPath('userData')
+  // fs.rm(userDataPath, { recursive: true, force: true }, (err) => {
+  //   if (err) {
+  //     if (err.code === 'ENOENT') {
+  //       console.log('目录不存在');
+  //     } else if (err.code === 'EBUSY') {
+  //       console.warn(`资源正忙或被锁定，无法删除 ${err}`)
+  //     } else {
+  //       console.error('删除文件夹时发生错误:', err)
+  //     }
+  //   } else {
+  //     console.log('Electron应用数据已清除');
+  //   }
+  // })
+  const notification = new Notification({
+    title: '缓存已清空',
+    body: '路径：' + userDataPath,
+    silent: true, // 禁止系统音
+    timeoutType: 'default', //default || never
+    icon: nativeImage.createFromPath(iconSimple)
+  })
+  notification.show()
 })

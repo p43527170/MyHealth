@@ -1,17 +1,11 @@
 import { defineStore } from 'pinia'
-import heshui from '../image/heshui.png'
-import jiuzuo from '../image/jiuzuo.png'
-import yanjing from '../image/yanjing.png'
-import qita from '../image/qita.png'
 import { Setting, AllReminderItems } from './datastore.interface'
-
 //默认初始数据
 const defaultSetting: AllReminderItems[] = [
   {
     title: '护眼提醒',
     url: 'yanjing',
     switch: true,
-    icon: yanjing,
     other: false,
     modeValue: 0,
     voiceValue: false,
@@ -21,7 +15,6 @@ const defaultSetting: AllReminderItems[] = [
     title: '久坐提醒',
     url: 'jiuzuo',
     switch: true,
-    icon: jiuzuo,
     other: false,
     modeValue: 0,
     voiceValue: false,
@@ -31,7 +24,6 @@ const defaultSetting: AllReminderItems[] = [
     title: '喝水提醒',
     url: 'heshui',
     switch: false,
-    icon: heshui,
     other: false,
     modeValue: 0,
     voiceValue: true,
@@ -42,7 +34,6 @@ const defaultSetting: AllReminderItems[] = [
     allocation: 0,
     startup: 0,
     url: 'qita',
-    icon: qita,
     other: true,
     custom: []
   }

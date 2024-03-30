@@ -3,13 +3,10 @@
     <div class="setting-ctn">
       <span>开机启动</span>
       <div>
-        <el-checkbox
-          :checked="setting.powerOn"
-          @change="(newValue) => dataStore.toggleSetting('powerOn', newValue)"
-        />
+        <el-checkbox :checked="setting.powerOn" @change="(newValue) => dataStore.toggleSetting('powerOn', newValue)" />
       </div>
     </div>
-    <div class="setting-ctn">
+    <!-- <div class="setting-ctn">
       <span>同频率提醒合并</span>
       <div>
         <el-checkbox
@@ -17,19 +14,16 @@
           @change="(newValue) => dataStore.toggleSetting('merge', newValue)"
         />
       </div>
-    </div>
+    </div> -->
     <div class="setting-ctn">
       <span>自动升级</span>
       <div>
-        <el-checkbox
-          v-model="setting.automaticUpgrade"
-          @change="(newValue) => dataStore.toggleSetting('automaticUpgrade', newValue)"
-        />
+        <el-checkbox v-model="setting.automaticUpgrade" @change="(newValue) => dataStore.toggleSetting('automaticUpgrade', newValue)" />
       </div>
     </div>
     <div class="setting-ctn">
-      <span>重置所有设置</span>
-      <el-link type="primary" :underline="false">重置</el-link>
+      <span>清理缓存文件(保留个人设置)</span>
+      <el-link type="primary" :underline="false" @click="resetData">清理</el-link>
     </div>
     <!-- <div class="setting-ctn">
       <span>清理缓存</span>
@@ -43,6 +37,10 @@ import { ref } from 'vue'
 import { useDataStore } from '@renderer/store/dataStore'
 const dataStore = useDataStore()
 const setting = ref(dataStore.setting)
+
+const resetData = () => {
+  window.electron.ipcRenderer.invoke('clear-all-data-and-cache')
+}
 </script>
 
 <style scoped lang="scss">

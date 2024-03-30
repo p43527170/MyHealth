@@ -1,8 +1,12 @@
 <template>
-  <div v-if="!!localData && !!localData.icon" class="button" @click="clickRouter">
+  <div
+    v-if="!!localData && !!localData.url"
+    class="button"
+    @click="clickRouter"
+  >
     <div class="title">
       <div class="image">
-        <img :src="localData.icon.value as unknown as string" alt="" />
+        <img :src="images[dataIndex] as unknown as string" alt="" />
       </div>
       <span>{{ localData.title.value }}</span>
     </div>
@@ -11,7 +15,9 @@
         模式：<span>{{ mode[localData.modeValue?.value].title }}</span>
       </p>
       <p>
-        声音：<span>{{ localData.voiceValue?.value ? voice[1] : voice[0] }}</span>
+        声音：<span>{{
+          localData.voiceValue?.value ? voice[1] : voice[0]
+        }}</span>
       </p>
       <p v-if="localData.strengthValue?.value != undefined">
         强度：<span>{{ strength[localData.strengthValue.value] }}</span>
@@ -37,17 +43,20 @@
 </template>
 
 <script setup lang="ts">
+import yanjing from '../image/yanjing.png'
+import jiuzuo from '../image/jiuzuo.png'
+import heshui from '../image/heshui.png'
+import qita from '../image/qita.png'
 import { toRefs } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDataStore } from '../store/dataStore'
 const dataStore = useDataStore()
 const router = useRouter()
-
+const images = [yanjing, jiuzuo, heshui, qita]
 interface Iprops {
   appData: {
     title: string
     url: string
-    icon: string
     other: boolean
     switch?: boolean
     modeValue?: number
@@ -59,6 +68,7 @@ interface Iprops {
 }
 const props = defineProps<Iprops>()
 const localData = toRefs(props.appData)
+console.log(localData)
 const dataIndex = props.index
 const mode = dataStore.reminderSettings[localData.url.value]
 const strength = dataStore.strength
@@ -87,9 +97,11 @@ const clickRouter = () => {
 <style scoped lang="scss">
 .button {
   //背景色渐变半透明
-  background: linear-gradient(135deg,
-      rgba(70, 71, 88, 0.5) 0%,
-      rgba(79, 85, 99, 0.6) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(70, 71, 88, 0.5) 0%,
+    rgba(79, 85, 99, 0.6) 100%
+  );
   border-radius: 8px;
   box-sizing: border-box;
   width: 100%;
@@ -99,9 +111,11 @@ const clickRouter = () => {
   transition: background 0.24s ease;
 
   &:hover {
-    background: linear-gradient(135deg,
-        rgba(70, 71, 88, 0.6) 0%,
-        rgba(79, 85, 99, 0.7) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(70, 71, 88, 0.6) 0%,
+      rgba(79, 85, 99, 0.7) 100%
+    );
   }
 
   .title {

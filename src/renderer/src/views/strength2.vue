@@ -2,36 +2,58 @@
   <div class="strengthBackground" @dblclick="close">
     <div style="text-align: center">
       <div class="image"><img :src="selectImage" alt="" /></div>
-      <h1 style="color: #ffffff">{{ info.title }}</h1>
-      <h3>{{ text }} <span v-if="index === 0 || index === 1"> {{ num }} 秒</span></h3>
+      <h1 style="color: #ffffff">{{ title }}</h1>
+      <h3>
+        {{ text }} <span v-if="index === 0 || index === 1"> {{ num }} 秒</span>
+      </h3>
       <span class="tip">（双击鼠标或按ESC键关闭）</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
 import yanjing from '../image/yanjing.png'
 import jiuzuo from '../image/jiuzuo.png'
 import heshui from '../image/heshui.png'
 import qita from '../image/qita.png'
 import { reminderSettings } from './publicData'
 
-const images = [yanjing, jiuzuo, heshui, qita]
-const selectImage = ref('')
-const info = ref({ title: '' })
-const text = ref('')
-const num = ref(20)
-const index = ref(0)
-window.electron.ipcRenderer.on('getStrength12Info', (_event, value) => {
-  info.value = value
-  selectImage.value = images[value.index]
-  text.value = reminderSettings[value.url][value.modeValue].text
-  num.value = reminderSettings[value.url][value.modeValue].time
-  index.value = value.index
-})
+const images = [yanjing, jiuzuo, heshui, qita] //图标组
+const selectImage = ref('') //本提示的图标
+const title = ref('') //提示标题
+const text = ref('') //提示文字
+const num = ref(20) //倒计时
+const index = ref(0) //提示索引
+const name = ref('') //提示名
+watch(
+  () =>
+    route.query as {
+      url: string
+      title: string
+      modeValue: string
+      index: string
+    },
+  (newValue) => {
+    if (Object.keys(newValue).length) {
+      const info = reminderSettings[newValue.url] //提示信息
+      const modeValue = parseInt(newValue.modeValue)
+      selectImage.value = images[newValue.index]
+      index.value = parseInt(newValue.index)
+      text.value = info[modeValue].text
+      num.value = info[modeValue].time
+      name.value = newValue.url
+      title.value = newValue.title
+      console.log(title.value)
+    }
+  },
+  { immediate: true }
+)
+
 const close = () => {
-  window.electron.ipcRenderer.invoke('closeStrength')
+  window.electron.ipcRenderer.invoke('closeStrength', name.value)
 }
 // 添加事件监听器
 const handleKeyDown = (event: KeyboardEvent) => {

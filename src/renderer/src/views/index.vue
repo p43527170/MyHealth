@@ -1,5 +1,5 @@
 <template>
-  <div class="container" @click="openStrength1">
+  <div class="container">
     <header class="header">
       <div class="myLogo">
         <img src="../image/logobai.png" alt="logo" />
@@ -46,7 +46,6 @@ for (const prop in setting.value) {
   watch(
     () => setting.value[prop],
     async (newValue) => {
-      console.log(prop)
       // 进行持久化
       await window.electron.ipcRenderer.invoke(
         'setData',
@@ -58,6 +57,11 @@ for (const prop in setting.value) {
     }
   )
 }
+
+window.electron.ipcRenderer.on('toSetting', () => {
+  console.log('toSetting')
+  router.push('/setting')
+})
 
 //goBack返回上一页
 const goBack = () => {

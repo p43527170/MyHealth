@@ -15,7 +15,6 @@ enum ReminderActionType {
 interface CommonReminderItem {
   title: string
   url: string
-  icon: string
   other: boolean
   switch?: boolean
   modeValue?: number
