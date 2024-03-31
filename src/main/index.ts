@@ -17,6 +17,7 @@ import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
 import { systemWork, upDataSystemWork } from './system'
 import { startCustomIntervalTask, updataBusiness, resetJobs } from './mainBusiness'
+import { handleUpdate } from './autoUpdate'
 const store = new Store()
 export const allWindows: BrowserWindow[] = []
 let mainWindow: Electron.BrowserWindow | null = null
@@ -30,7 +31,6 @@ function toggleMainWindow() {
     }
   }
 }
-
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -51,7 +51,6 @@ function createWindow(): void {
     }
   })
   allWindows.push(mainWindow)
-
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
   })
@@ -74,9 +73,10 @@ function createWindow(): void {
   ipcMain.handle('getData', (_event, key) => {
     return store.get(key)
   })
-  //启动执行系统设置6
+  //启动执行系统设置
   ipcMain.handle('startWork', async () => {
-    const info = await store.get('settingData')
+    const info = await store.get('settingData') as unknown as { automaticUpgrade: boolean }
+    handleUpdate(info.automaticUpgrade)
     systemWork(info)
   })
   //更新系统设置业务
