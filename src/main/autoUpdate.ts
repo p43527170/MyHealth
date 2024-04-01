@@ -7,27 +7,24 @@ export function handleUpdate(flag: boolean) {
   autoUpdater.allowPrerelease = true
   autoUpdater.autoDownload = flag //是否自动下载
   //开始检查更新
-  // autoUpdater.checkForUpdates().then((res) => {
-  //   console.log(res)
-  // })
+  // autoUpdater.checkForUpdates()
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    const notification = new Notification({
+      title: '更新提示',
+      body: 'Github 网络连接失败:' + err
+    })
+    notification.show()
+  })
   if (!flag) {
-    autoUpdater
-      .checkForUpdatesAndNotify()
-      .then((res) => {
-        if (res !== null && res.updateInfo) {
-          sendUpdateMessage({
-            cmd: 'info',
-            message: '发现可用更新版本：' + res.updateInfo.version + ' 是否更新'
-          })
-        }
-      })
-      .catch((err) => {
-        const notification = new Notification({
-          title: '更新提示',
-          body: 'Github 网络连接失败:' + err
+    autoUpdater.on('update-available', (res) => {
+      console.log('Update available.')
+      if (res !== null) {
+        sendUpdateMessage({
+          cmd: 'info',
+          message: '发现可用更新版本：' + res.version + ' 是否更新'
         })
-        notification.show()
-      })
+      }
+    })
   }
   // 监听无可用更新事件
   // autoUpdater.on('update-not-available', function (message) {
