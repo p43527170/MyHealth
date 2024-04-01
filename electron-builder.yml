@@ -42,7 +42,10 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: p43527170
+  repo: MyHealth
+  releaseType: release # 可选，发布类型（如 draft, prerelease, release）
+  token: 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 # 可以在这里直接写入 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 (不推荐)，或者在构建时通过环境变量提供
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
