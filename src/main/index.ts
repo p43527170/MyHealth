@@ -127,6 +127,12 @@ app.whenReady().then(() => {
         resetJobs()
       }
     },
+    {
+      label: '检查更新',
+      click: () => {
+        handleUpdate(false)
+      }
+    },
     { label: '显示/隐藏窗口', click: () => toggleMainWindow() },
     { label: '关于', role: 'about' },
     { label: '退出', role: 'quit' }
