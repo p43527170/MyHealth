@@ -15,35 +15,24 @@ const myImage = {
   2: nativeImage.createFromPath(heshui),
   3: nativeImage.createFromPath(qita)
 }
-const jobs = {}
 
 export const updataBusiness = (
   index: number,
   key: string,
   newValue: number | boolean
 ) => {
-  if (key + 'Updata' in methods) {
-    methods[key + 'Updata'](index, newValue)
-  }
-}
-
-const methods = {
-  switchUpdata: (index: number, newValue: boolean) => {
+  if (key == 'switch') {
     if (newValue) {
-      startCustomIntervalTask(index)
+      scheduler.startCustomIntervalTask(index)
     } else {
-      jobs[index].cancel()
+      scheduler.cancelReminder(index)
+    }
+  } else {
+    const jobWithReminder = scheduler.jobs[index]
+    if (jobWithReminder && jobWithReminder.reminder) {
+      jobWithReminder.reminder.updateReminderSettings('voice', newValue)
     }
   }
-  // modeValueUpdata: (index: number, newValue: number) => {
-  //   console.log(index, newValue, 'modeValueUpdata')
-  // }
-  // voiceValueUpdata: (index: number, newValue: boolean) => {
-  //   console.log(index, newValue, 'voiceValueUpdata')
-  // },
-  // strengthValueUpdata: (index: number, newValue: number) => {
-  //   console.log(index, newValue, 'strengthValueUpdata')
-  // }
 }
 
 const reminderSettings = {
@@ -90,140 +79,6 @@ const reminderSettings = {
   ]
 }
 
-//定时提醒任务创建
-export const startCustomIntervalTask = async (index: number) => {
-  const appData = (await store.get('appData')) as []
-  const info = appData[index]
-  const { title, url, modeValue, voiceValue, strengthValue } = info
-  // 获取模式
-  const mode = reminderSettings[url]
-  const modeType = mode[modeValue] as { time: number; text: string }
-  // 计算本模式的循环间隔intervalInMinutes
-  const intervalInMinutes = modeType.time //时间间隔分钟
-  const now = new Date()
-  const nextExecution = new Date(now.getTime() + intervalInMinutes * 60 * 1000)
-  //计算提醒强度
-  strengthJudge(
-    strengthValue,
-    nextExecution,
-    modeType.text,
-    title,
-    voiceValue,
-    index,
-    url,
-    modeValue
-  )
-}
-
-/*
-  强度判断
-  0: 低
-  1: 中
-  2: 高
-*/
-const strengthJudge = (
-  strength: number,
-  time: Date,
-  text: string,
-  title: string,
-  voiceValue: boolean,
-  index: number,
-  url,
-  modeValue
-) => {
-  clearJob(index)
-  if (strength === 0) {
-    const notification = new Notification({
-      title: title,
-      body: text,
-      silent: true, // 禁止系统音
-      timeoutType: 'default', //default || never
-      icon: myImage[index]
-    })
-    const job = schedule.scheduleJob(time, function () {
-      //执行任务
-      notification.show()
-      if (voiceValue) {
-        const window = allWindows[0]
-        if (!window.isDestroyed()) {
-          window.webContents.send('play-audio-from-main-process')
-        }
-      }
-      // 任务执行完后，重新安排下一次执行
-      startCustomIntervalTask(index)
-    })
-    jobs[index] = job
-  } else if (strength === 1) {
-    const job = schedule.scheduleJob(time, function () {
-      const info = {
-        voiceValue,
-        title,
-        url,
-        index,
-        modeValue
-      }
-      //执行任务
-      creatStrength1(info)
-      if (voiceValue) {
-        const window = allWindows[0]
-        if (!window.isDestroyed()) {
-          window.webContents.send('play-audio-from-main-process')
-        }
-      }
-      // 任务执行完后，重新安排下一次执行
-      startCustomIntervalTask(index)
-    })
-    jobs[index] = job
-  } else if (strength === 2) {
-    const job = schedule.scheduleJob(time, function () {
-      const info = {
-        voiceValue,
-        title,
-        url,
-        index,
-        modeValue
-      }
-      //执行任务
-      creatStrength2(info)
-      if (voiceValue) {
-        const window = allWindows[0]
-        if (!window.isDestroyed()) {
-          window.webContents.send('play-audio-from-main-process')
-        }
-      }
-      // 任务执行完后，重新安排下一次执行
-      startCustomIntervalTask(index)
-    })
-    jobs[index] = job
-  } else {
-    console.log('strengthJudge error')
-  }
-}
-// 增加一个清除已有定时任务的方法
-const clearJob = (index: number) => {
-  const job = jobs[index]
-  if (job) {
-    job.cancel()
-    delete jobs[index]
-  }
-}
-//重置提醒任务
-export const resetJobs = () => {
-  for (const key in jobs) {
-    const job = jobs[key]
-    job.cancel()
-    methods.switchUpdata(parseInt(key), true)
-  }
-  const notification = new Notification({
-    title: '重置提醒时间',
-    body: '所有提醒将重新开始计时',
-    silent: true, // 禁止系统音
-    timeoutType: 'default', //default || never
-    icon: nativeImage.createFromPath(logo)
-  })
-  notification.show()
-}
-
 interface ReminderInfo {
   voiceValue: boolean
   title: string
@@ -231,23 +86,26 @@ interface ReminderInfo {
   index: number
   modeValue: number
   strengthValue?: number
+  switch?: boolean
 }
-// 创建一个Reminder类，封装提醒的相关信息和方法
+
+// Reminder类，负责提醒的相关信息和方法
 class Reminder {
   constructor(
     public title: string,
     public url: string,
     public modeValue: number,
     public voiceValue: boolean,
-    public strengthValue: number,
+    public strengthValue: number | undefined,
     public index: number,
     public info: { time: number; text: string }
   ) {
-    const mode = reminderSettings[this.url]
-    info = mode[this.modeValue] as { time: number; text: string }
+    this.info = (reminderSettings[this.url]?.[this.modeValue] as {
+      time: number
+      text: string
+    }) || { time: 0, text: '' }
   }
-
-  //获取下次时间点
+  //获取提醒时间点
   calculateNextExecution(): Date {
     const intervalInMinutes = this.info.time
     const now = new Date()
@@ -256,9 +114,15 @@ class Reminder {
 
   //执行提醒
   executeReminder(notificationManager: NotificationManager) {
+    // const currentInfo = this.getInfo()
     switch (this.strengthValue) {
       case 0:
-        notificationManager.showNotification(this.title, this.info.text, false)
+        notificationManager.showNotification(
+          this.title,
+          this.info.text,
+          this.voiceValue,
+          this.index
+        )
         break
       case 1:
         creatStrength1(this.getInfo())
@@ -270,10 +134,10 @@ class Reminder {
         console.error('Invalid reminder strength')
         break
     }
-    // 重新调度下一个提醒
+    // 重新调度提醒任务
     this.rescheduleReminder(scheduler)
   }
-
+  // 需要传递的提醒信息
   private getInfo(): ReminderInfo {
     return {
       voiceValue: this.voiceValue,
@@ -283,35 +147,50 @@ class Reminder {
       modeValue: this.modeValue
     }
   }
-
   //重新调度提醒任务
   rescheduleReminder(scheduler: ReminderScheduler) {
     scheduler.scheduleReminder(this)
+  }
+
+  // 新增一个方法用于更新提醒属性
+  public updateReminderSettings(type: string, value: number | boolean) {
+    if (type) {
+      this.modeValue = value as number
+      this.voiceValue = value as boolean
+      this.strengthValue = value as number
+    }
   }
 }
 interface Job {
   cancel(): void
 }
-// 创建ReminderScheduler类，负责调度提醒任务
+interface ScheduledReminder {
+  job: Job
+  reminder: Reminder
+}
+// ReminderScheduler类，负责调度提醒任务
 class ReminderScheduler {
-  private jobs: Job[] = []
+  public jobs: ScheduledReminder[] = []
   constructor(private notificationManager: NotificationManager) {}
 
+  //创建提醒
+  private createReminder(info: ReminderInfo): Reminder {
+    return new Reminder(
+      info.title,
+      info.url,
+      info.modeValue,
+      info.voiceValue,
+      info.strengthValue,
+      info.index,
+      { time: 20, text: '' }
+    )
+  }
   //开始定时任务
-  async startCustomIntervalTask(i: number) {
-    const appData = (await store.get('appData')) as []
-    if (appData[i]) {
-      const { title, url, modeValue, voiceValue, strengthValue, index } =
-        appData[i]
-      const reminder = new Reminder(
-        title,
-        url,
-        modeValue,
-        voiceValue,
-        strengthValue,
-        index,
-        { time: 20, text: '' }
-      )
+  async startCustomIntervalTask(index: number) {
+    const appData = (await store.get('appData')) as ReminderInfo[]
+    if (appData[index]) {
+      appData[index].index = index
+      const reminder = this.createReminder(appData[index])
       reminder.rescheduleReminder(this)
     }
   }
@@ -320,15 +199,27 @@ class ReminderScheduler {
   cancelReminder(index: number) {
     const job = this.jobs[index]
     if (job) {
-      job.cancel()
+      job.job.cancel()
       delete this.jobs[index]
     }
   }
 
   //重置所有提醒任务
-  resetAllReminders() {
-    this.jobs.forEach((job) => job.cancel())
-    // ... 清除相关状态并发送通知等操作
+  async resetAllReminders() {
+    // 取消并清空所有正在运行的任务
+    this.jobs.forEach((job) => job && job.job.cancel())
+    this.jobs.length = 0
+    // 重新从 appData 加载并调度所有提醒任务（前提是开关打开）
+    const appData = (await store.get('appData')) as ReminderInfo[]
+    appData.forEach((item, index) => {
+      if (item.switch) {
+        console.log(item)
+        item.index = index
+        const reminder = this.createReminder(item)
+        reminder.rescheduleReminder(this)
+      }
+    })
+    this.notificationManager.showNotificationRe()
   }
 
   //调度提醒任务
@@ -337,24 +228,50 @@ class ReminderScheduler {
     const job = schedule.scheduleJob(reminder.calculateNextExecution(), () => {
       reminder.executeReminder(this.notificationManager)
     })
-    this.jobs[reminder.index] = job
+    if (job) {
+      this.jobs[reminder.index] = { job: job, reminder } // 关联Job和Reminder
+    }
   }
 }
 
-// // NotificationManager类，负责处理通知
-// class NotificationManager {
-//   showNotification(title: string, body: string, playAudio: boolean) {
-//     // ...
-//   }
-// }
+// NotificationManager类，负责处理通知
+class NotificationManager {
+  showNotification(
+    title: string,
+    body: string,
+    playAudio: boolean,
+    index: number
+  ) {
+    const notification = new Notification({
+      title: title,
+      body: body,
+      silent: true, // 禁止系统音
+      timeoutType: 'default', //default || never
+      icon: myImage[index]
+    })
+    notification.show()
+    if (playAudio) {
+      this.palyVoice()
+    }
+  }
+  private palyVoice() {
+    const window = allWindows[0]
+    if (!window.isDestroyed()) {
+      window.webContents.send('play-audio-from-main-process')
+    }
+  }
+  showNotificationRe() {
+    const notification = new Notification({
+      title: '重置提醒时间',
+      body: '所有提醒将重新开始计时',
+      silent: true, // 禁止系统音
+      timeoutType: 'default', //default || never
+      icon: nativeImage.createFromPath(logo)
+    })
+    notification.show()
+  }
+}
 
-// // 初始化和使用
-// const notificationManager = new NotificationManager()
-// const scheduler = new ReminderScheduler(
-//   store,
-//   notificationManager,
-// )
-
-// // 启动或重置提醒任务
-// scheduler.startCustomIntervalTask(/* ... */)
-// scheduler.resetAllReminders()
+// 初始化和使用
+const notificationManager = new NotificationManager()
+export const scheduler = new ReminderScheduler(notificationManager)

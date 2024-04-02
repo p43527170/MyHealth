@@ -16,7 +16,7 @@ import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
 import { systemWork, upDataSystemWork } from './system'
-import { startCustomIntervalTask, updataBusiness, resetJobs } from './mainBusiness'
+import { updataBusiness, scheduler } from './mainBusiness'
 import { handleUpdate } from './autoUpdate'
 const store = new Store()
 export const allWindows: BrowserWindow[] = []
@@ -85,7 +85,8 @@ function createWindow(): void {
   })
   //初始化App业务
   ipcMain.handle('startRemind', (_event, index) => {
-    startCustomIntervalTask(index)
+    console.log('startRemind', index)
+    scheduler.startCustomIntervalTask(index)
   })
   //更新App业务
   ipcMain.handle('upDataAppWork', async (_event, index, key, newValue) => {
@@ -124,7 +125,8 @@ app.whenReady().then(() => {
     {
       label: '重置提醒时间',
       click: () => {
-        resetJobs()
+        // resetJobs()
+        scheduler.resetAllReminders()
       }
     },
     {
