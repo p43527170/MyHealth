@@ -51,7 +51,7 @@ const reminderSettings = {
     {
       title: '20-20-20 护眼法',
       text: '请向 20 英尺（6米）外眺望 20 秒',
-      time: 20
+      time: 2
     },
     {
       title: '一小时护眼法',
@@ -63,7 +63,7 @@ const reminderSettings = {
     {
       title: '一小时久坐提醒',
       text: '一小时啦，请起身活动 1 分钟',
-      time: 60
+      time: 3
     },
     {
       title: '两小时久坐提醒',
@@ -75,7 +75,7 @@ const reminderSettings = {
     {
       title: '半小时喝水提醒',
       text: '半小时啦，记得喝水',
-      time: 30
+      time: 5
     },
     {
       title: '一小时喝水提醒',

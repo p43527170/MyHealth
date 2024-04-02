@@ -6,5 +6,5 @@ provider: github
 owner: p43527170
 repo: MyHealth
 private: false # 如果是私有仓库，此项设为true并确保有正确的token配置
-channel: latest # 或者是特定的预发布频道名，如 beta、alpha 等
+channel: latest # 或者是特定的预发布频道名，如 latest、beta、alpha 等
 updaterCacheDirName: xlHealth-updater
