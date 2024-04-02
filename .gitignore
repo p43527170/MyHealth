@@ -1,5 +1,38 @@
-node_modules
-dist
-out
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+# 排除 node_modules 目录
+node_modules/
+
+# 排除 dist 目录
+dist/
+
+# 排除 out 目录
+out/
+
+# 排除 .DS_Store 文件
 .DS_Store
-*.log*
+
+# 排除所有 .log 结尾的日志文件
+*.log

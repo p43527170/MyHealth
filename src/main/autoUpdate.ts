@@ -17,7 +17,6 @@ export function handleUpdate(flag: boolean) {
   })
   if (!flag) {
     autoUpdater.on('update-available', (res) => {
-      console.log('Update available.')
       if (res !== null) {
         sendUpdateMessage({
           cmd: 'info',
