@@ -186,7 +186,7 @@ export const creatStrength1 = async (info) => {
   const mainScreen = screen.getPrimaryDisplay()
   const { width } = mainScreen.size
 
-  // 新建窗口，宽度和高度假设分别为800和600
+  // 新建窗口
   const winWidth = 340
   const winHeight = 110
 

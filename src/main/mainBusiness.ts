@@ -223,3 +223,138 @@ export const resetJobs = () => {
   })
   notification.show()
 }
+
+interface ReminderInfo {
+  voiceValue: boolean
+  title: string
+  url: string
+  index: number
+  modeValue: number
+  strengthValue?: number
+}
+// 创建一个Reminder类，封装提醒的相关信息和方法
+class Reminder {
+  constructor(
+    public title: string,
+    public url: string,
+    public modeValue: number,
+    public voiceValue: boolean,
+    public strengthValue: number,
+    public index: number,
+    public info: { time: number; text: string }
+  ) {
+    const mode = reminderSettings[this.url]
+    info = mode[this.modeValue] as { time: number; text: string }
+  }
+
+  //获取下次时间点
+  calculateNextExecution(): Date {
+    const intervalInMinutes = this.info.time
+    const now = new Date()
+    return new Date(now.getTime() + intervalInMinutes * 60 * 1000)
+  }
+
+  //执行提醒
+  executeReminder(notificationManager: NotificationManager) {
+    switch (this.strengthValue) {
+      case 0:
+        notificationManager.showNotification(this.title, this.info.text, false)
+        break
+      case 1:
+        creatStrength1(this.getInfo())
+        break
+      case 2:
+        creatStrength2(this.getInfo())
+        break
+      default:
+        console.error('Invalid reminder strength')
+        break
+    }
+    // 重新调度下一个提醒
+    this.rescheduleReminder(scheduler)
+  }
+
+  private getInfo(): ReminderInfo {
+    return {
+      voiceValue: this.voiceValue,
+      title: this.title,
+      url: this.url,
+      index: this.index,
+      modeValue: this.modeValue
+    }
+  }
+
+  //重新调度提醒任务
+  rescheduleReminder(scheduler: ReminderScheduler) {
+    scheduler.scheduleReminder(this)
+  }
+}
+interface Job {
+  cancel(): void
+}
+// 创建ReminderScheduler类，负责调度提醒任务
+class ReminderScheduler {
+  private jobs: Job[] = []
+  constructor(private notificationManager: NotificationManager) {}
+
+  //开始定时任务
+  async startCustomIntervalTask(i: number) {
+    const appData = (await store.get('appData')) as []
+    if (appData[i]) {
+      const { title, url, modeValue, voiceValue, strengthValue, index } =
+        appData[i]
+      const reminder = new Reminder(
+        title,
+        url,
+        modeValue,
+        voiceValue,
+        strengthValue,
+        index,
+        { time: 20, text: '' }
+      )
+      reminder.rescheduleReminder(this)
+    }
+  }
+
+  //取消任务
+  cancelReminder(index: number) {
+    const job = this.jobs[index]
+    if (job) {
+      job.cancel()
+      delete this.jobs[index]
+    }
+  }
+
+  //重置所有提醒任务
+  resetAllReminders() {
+    this.jobs.forEach((job) => job.cancel())
+    // ... 清除相关状态并发送通知等操作
+  }
+
+  //调度提醒任务
+  scheduleReminder(reminder: Reminder) {
+    this.cancelReminder(reminder.index)
+    const job = schedule.scheduleJob(reminder.calculateNextExecution(), () => {
+      reminder.executeReminder(this.notificationManager)
+    })
+    this.jobs[reminder.index] = job
+  }
+}
+
+// // NotificationManager类，负责处理通知
+// class NotificationManager {
+//   showNotification(title: string, body: string, playAudio: boolean) {
+//     // ...
+//   }
+// }
+
+// // 初始化和使用
+// const notificationManager = new NotificationManager()
+// const scheduler = new ReminderScheduler(
+//   store,
+//   notificationManager,
+// )
+
+// // 启动或重置提醒任务
+// scheduler.startCustomIntervalTask(/* ... */)
+// scheduler.resetAllReminders()
