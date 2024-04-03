@@ -40,8 +40,6 @@ const defaultSetting: AllReminderItems[] = [
 ]
 const defaultSystemSettings: Setting = {
   powerOn: true,
-  merge: false,
-  floatingWindow: false,
   automaticUpgrade: false
 }
 export const useDataStore = defineStore('dataStore', {
@@ -55,8 +53,6 @@ export const useDataStore = defineStore('dataStore', {
     appData: [],
     setting: {
       powerOn: false,
-      merge: false,
-      floatingWindow: false,
       automaticUpgrade: false
     },
     reminderSettings: {

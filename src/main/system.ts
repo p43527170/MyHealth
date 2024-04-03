@@ -10,7 +10,7 @@ const autoLauncher = new AutoLaunch({
 })
 
 export const systemWork = (info) => {
-  const { powerOn, merge, floatingWindow, automaticUpgrade } = info
+  const { powerOn } = info
   // 启用开机自启动
   if (powerOn) {
     autoLauncher.enable().catch((err) => console.error(err))
@@ -20,18 +20,6 @@ export const systemWork = (info) => {
         autoLauncher.disable().catch((err) => console.error(err))
       }
     })
-  }
-  //是否合并消息
-  if (merge) {
-    console.log('true,merge')
-  }
-  //是否开启悬浮窗
-  if (floatingWindow) {
-    console.log('true,floatingWindow')
-  }
-  //是否自动更新
-  if (automaticUpgrade) {
-    console.log('true,automaticUpgrade')
   }
 }
 
@@ -47,10 +35,6 @@ export const upDataSystemWork = (key, value) => {
         }
       })
     }
-  } else if (key == 'merge') {
-    console.log('updata merge work')
-  } else if (key == 'floatingWindow') {
-    console.log('updata floatingWindow work')
   } else if (key == 'automaticUpgrade') {
     console.log('updata automaticUpgrade work')
   }

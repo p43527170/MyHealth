@@ -2,9 +2,9 @@ import { autoUpdater } from 'electron-updater'
 import { dialog, Notification } from 'electron'
 export function handleUpdate(flag: boolean) {
   // 开启开发环境下的更新检查
-  autoUpdater.forceDevUpdateConfig = true
+  // autoUpdater.forceDevUpdateConfig = true
   // 或者允许预发布版本更新
-  autoUpdater.allowPrerelease = true
+  // autoUpdater.allowPrerelease = true
   autoUpdater.autoDownload = flag //是否自动下载
   //开始检查更新
   // autoUpdater.checkForUpdates()

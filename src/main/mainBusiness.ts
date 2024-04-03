@@ -1,4 +1,6 @@
-import { Notification, nativeImage } from 'electron'
+import { Notification, nativeImage, screen, BrowserWindow } from 'electron'
+import { join } from 'path'
+import { is } from '@electron-toolkit/utils'
 import schedule from 'node-schedule'
 import Store from 'electron-store'
 const store = new Store()
@@ -7,7 +9,7 @@ import jiuzuo from '../../src/renderer/src/image/jiuzuo.png?asset'
 import heshui from '../../src/renderer/src/image/heshui.png?asset'
 import qita from '../../src/renderer/src/image/qita.png?asset'
 import logo from '../../src/renderer/src/image/logobai.png?asset'
-import { allWindows, creatStrength1, creatStrength2 } from './index'
+import { allWindows } from './index'
 
 const myImage = {
   0: nativeImage.createFromPath(yanjing),
@@ -28,10 +30,7 @@ export const updataBusiness = (
       scheduler.cancelReminder(index)
     }
   } else {
-    const jobWithReminder = scheduler.jobs[index]
-    if (jobWithReminder && jobWithReminder.reminder) {
-      jobWithReminder.reminder.updateReminderSettings('voice', newValue)
-    }
+    scheduler.updateReminder(index, key, newValue)
   }
 }
 
@@ -40,19 +39,19 @@ const reminderSettings = {
     {
       title: '20-20-20 护眼法',
       text: '请向 20 英尺（6米）外眺望 20 秒',
-      time: 2
+      time: 1
     },
     {
       title: '一小时护眼法',
       text: '请闭眼或眺望远方 1 ~ 5 分钟',
-      time: 60
+      time: 0.2
     }
   ],
   jiuzuo: [
     {
       title: '一小时久坐提醒',
       text: '一小时啦，请起身活动 1 分钟',
-      time: 3
+      time: 0.3
     },
     {
       title: '两小时久坐提醒',
@@ -64,7 +63,7 @@ const reminderSettings = {
     {
       title: '半小时喝水提醒',
       text: '半小时啦，记得喝水',
-      time: 5
+      time: 0.4
     },
     {
       title: '一小时喝水提醒',
@@ -88,7 +87,12 @@ interface ReminderInfo {
   strengthValue?: number
   switch?: boolean
 }
-
+export interface StrengthWindowOptions {
+  width: number
+  height: number
+  x?: number
+  y?: number
+}
 // Reminder类，负责提醒的相关信息和方法
 class Reminder {
   constructor(
@@ -109,12 +113,13 @@ class Reminder {
   calculateNextExecution(): Date {
     const intervalInMinutes = this.info.time
     const now = new Date()
+    console.log('calculateNextExecution')
     return new Date(now.getTime() + intervalInMinutes * 60 * 1000)
   }
 
   //执行提醒
   executeReminder(notificationManager: NotificationManager) {
-    // const currentInfo = this.getInfo()
+    console.log('executeReminder', this.url, this.index, this.info.time)
     switch (this.strengthValue) {
       case 0:
         notificationManager.showNotification(
@@ -125,16 +130,34 @@ class Reminder {
         )
         break
       case 1:
-        creatStrength1(this.getInfo())
+        notificationManager.createStrengthWindow(
+          this.getInfo(),
+          {
+            width: 340,
+            height: 110,
+            x: 10,
+            y: 10
+          },
+          '/strength1'
+        )
         break
       case 2:
-        creatStrength2(this.getInfo())
+        notificationManager.createStrengthWindow(
+          this.getInfo(),
+          {
+            width: 1920,
+            height: 1080
+          },
+          '/strength2'
+        )
         break
       default:
         console.error('Invalid reminder strength')
         break
     }
     // 重新调度提醒任务
+    this.info = reminderSettings[this.url]?.[this.modeValue]
+    console.log(44444);
     this.rescheduleReminder(scheduler)
   }
   // 需要传递的提醒信息
@@ -149,16 +172,13 @@ class Reminder {
   }
   //重新调度提醒任务
   rescheduleReminder(scheduler: ReminderScheduler) {
+    console.log('00000');
     scheduler.scheduleReminder(this)
   }
 
-  // 新增一个方法用于更新提醒属性
+  // 更新当前提醒属性
   public updateReminderSettings(type: string, value: number | boolean) {
-    if (type) {
-      this.modeValue = value as number
-      this.voiceValue = value as boolean
-      this.strengthValue = value as number
-    }
+    this[type] = value
   }
 }
 interface Job {
@@ -170,7 +190,7 @@ interface ScheduledReminder {
 }
 // ReminderScheduler类，负责调度提醒任务
 class ReminderScheduler {
-  public jobs: ScheduledReminder[] = []
+  private jobs: ScheduledReminder[] = []
   constructor(private notificationManager: NotificationManager) {}
 
   //创建提醒
@@ -225,6 +245,7 @@ class ReminderScheduler {
   //调度提醒任务
   scheduleReminder(reminder: Reminder) {
     this.cancelReminder(reminder.index)
+    console.log(1111);
     const job = schedule.scheduleJob(reminder.calculateNextExecution(), () => {
       reminder.executeReminder(this.notificationManager)
     })
@@ -232,16 +253,26 @@ class ReminderScheduler {
       this.jobs[reminder.index] = { job: job, reminder } // 关联Job和Reminder
     }
   }
+  //更新提醒任务
+  updateReminder(index, key, newValue) {
+    const jobWithReminder = this.jobs[index]
+    if (jobWithReminder && jobWithReminder.reminder) {
+      jobWithReminder.reminder.updateReminderSettings(key, newValue)
+    }
+  }
 }
 
 // NotificationManager类，负责处理通知
+export const strengthContext = {}
 class NotificationManager {
+  private strengthContextNum = -3
   showNotification(
     title: string,
     body: string,
     playAudio: boolean,
     index: number
   ) {
+    console.log('streng0')
     const notification = new Notification({
       title: title,
       body: body,
@@ -250,14 +281,14 @@ class NotificationManager {
       icon: myImage[index]
     })
     notification.show()
-    if (playAudio) {
-      this.palyVoice()
-    }
+    this.palyVoice(playAudio)
   }
-  private palyVoice() {
-    const window = allWindows[0]
-    if (!window.isDestroyed()) {
-      window.webContents.send('play-audio-from-main-process')
+  private palyVoice(playAudio) {
+    if (playAudio) {
+      const window = allWindows[0]
+      if (!window.isDestroyed()) {
+        window.webContents.send('play-audio-from-main-process')
+      }
     }
   }
   showNotificationRe() {
@@ -269,6 +300,67 @@ class NotificationManager {
       icon: nativeImage.createFromPath(logo)
     })
     notification.show()
+  }
+  async createStrengthWindow(
+    info: ReminderInfo,
+    options: StrengthWindowOptions,
+    routerPath: string
+  ) {
+    if (strengthContext[info.url]) {
+      return
+    }
+    const mainScreen = screen.getPrimaryDisplay()
+    const { width } = mainScreen.size
+    if (options.x) {
+      this.strengthContextNum = this.strengthContextNum + 4
+      options.x = Math.round((width - options.width) / 2)
+      options.y = 30 * this.strengthContextNum // 如果需要根据不同的窗口类型动态计算y坐标，可以在这里修改
+    }
+    const optionObj = {
+      ...options,
+      show: false,
+      useContentSize: true,
+      autoHideMenuBar: true,
+      titleBarStyle: 'hidden' as 'default' | 'hidden',
+      resizable: false,
+      frame: false,
+      maximizable: false,
+      transparent: true,
+      alwaysOnTop: true,
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        sandbox: false
+      }
+    }
+    const windowInstance = new BrowserWindow(optionObj)
+    //确保页面载入完毕后执行
+    windowInstance.webContents.on('did-finish-load', () => {
+      if (!strengthContext[info.url]) {
+        strengthContext[info.url] = windowInstance
+        if (!windowInstance.isDestroyed()) {
+          setTimeout(() => {
+            windowInstance.webContents.send('routerStrength', routerPath, info)
+            this.palyVoice(info.voiceValue)
+            windowInstance.show()
+          }, 200)
+        }
+      }
+    })
+    windowInstance.on('close', () => {
+      console.log(routerPath)
+      strengthContext[info.url] = null
+      // 根据实际情况决定是否需要针对不同窗口类型调整 strengthContextNum
+      if (routerPath === '/strength1') {
+        this.strengthContextNum = this.strengthContextNum - 4
+      }
+    })
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      await windowInstance.loadURL(
+        `${process.env['ELECTRON_RENDERER_URL']}/${routerPath}`
+      )
+    } else {
+      await windowInstance.loadFile(join(__dirname, '../renderer/index.html'))
+    }
   }
 }
 

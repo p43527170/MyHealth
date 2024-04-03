@@ -25,10 +25,6 @@
       <span>清理缓存文件(保留个人设置)</span>
       <el-link type="primary" :underline="false" @click="resetData">清理</el-link>
     </div>
-    <!-- <div class="setting-ctn">
-      <span>清理缓存</span>
-      <el-link type="primary" :underline="false">清理</el-link>
-    </div> -->
   </div>
 </template>
 

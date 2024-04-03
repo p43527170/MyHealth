@@ -6,7 +6,6 @@ import {
   Tray,
   nativeImage,
   Menu,
-  screen,
   session,
   Notification
 } from 'electron'
@@ -16,7 +15,7 @@ import icon from '../../resources/icon.png?asset'
 import iconSimple from '../../src/renderer/src/image/logobai.png?asset'
 import Store from 'electron-store'
 import { systemWork, upDataSystemWork } from './system'
-import { updataBusiness, scheduler } from './mainBusiness'
+import { updataBusiness, scheduler, strengthContext } from './mainBusiness'
 import { handleUpdate } from './autoUpdate'
 const store = new Store()
 export const allWindows: BrowserWindow[] = []
@@ -75,7 +74,10 @@ function createWindow(): void {
   })
   //启动执行系统设置
   ipcMain.handle('startWork', async () => {
-    const info = await store.get('settingData') as unknown as { automaticUpgrade: boolean }
+    console.log('startWork')
+    const info = (await store.get('settingData')) as unknown as {
+      automaticUpgrade: boolean
+    }
     handleUpdate(info.automaticUpgrade)
     systemWork(info)
   })
@@ -85,7 +87,6 @@ function createWindow(): void {
   })
   //初始化App业务
   ipcMain.handle('startRemind', (_event, index) => {
-    console.log('startRemind', index)
     scheduler.startCustomIntervalTask(index)
   })
   //更新App业务
@@ -102,6 +103,11 @@ function createWindow(): void {
   //窗口关闭方法
   ipcMain.handle('close', () => {
     mainWindow?.hide()
+  })
+  ipcMain.handle('closeStrength', (_event, name) => {
+    if (strengthContext[name]) {
+      strengthContext[name].close()
+    }
   })
 }
 
@@ -125,7 +131,6 @@ app.whenReady().then(() => {
     {
       label: '重置提醒时间',
       click: () => {
-        // resetJobs()
         scheduler.resetAllReminders()
       }
     },
@@ -176,128 +181,6 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-
-const strengthContext = {}
-let strengthContextNum = -3
-export const creatStrength1 = async (info) => {
-  if (strengthContext[info.url]) {
-    return
-  }
-  strengthContextNum = strengthContextNum + 4
-  // 获取主屏幕尺寸
-  const mainScreen = screen.getPrimaryDisplay()
-  const { width } = mainScreen.size
-
-  // 新建窗口
-  const winWidth = 340
-  const winHeight = 110
-
-  // 计算窗口的居中位置
-  const x = Math.round((width - winWidth) / 2)
-  const Strength1Window = new BrowserWindow({
-    width: winWidth,
-    height: winHeight,
-    x: x,
-    y: 30 * strengthContextNum,
-    show: false,
-    useContentSize: true,
-    autoHideMenuBar: true,
-    resizable: false,
-    frame: false,
-    maximizable: false,
-    titleBarStyle: 'hidden',
-    transparent: true,
-    alwaysOnTop: true, // 可选，让窗口总在最前面显示
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
-  Strength1Window.webContents.on('did-finish-load', () => {
-    // 确保窗口加载完成后再执行
-    console.log('did-finish-load', info)
-    if (!strengthContext[info.url]) {
-      strengthContext[info.url] = Strength1Window
-      const windowToReceiveMessage = strengthContext[info.url]
-      if (!windowToReceiveMessage.isDestroyed()) {
-        setTimeout(() => {
-          windowToReceiveMessage.webContents.send('routerStrength', '/strength1', info)
-          Strength1Window?.show()
-        }, 200)
-      }
-    }
-  })
-  // 关闭窗口清空窗口序列
-  Strength1Window.on('close', () => {
-    strengthContext[info.url] = null
-    strengthContextNum = strengthContextNum - 4
-  })
-
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    await Strength1Window.loadURL(
-      process.env['ELECTRON_RENDERER_URL'] + '/#/strength1'
-    )
-  } else {
-    await Strength1Window.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-}
-
-export const creatStrength2 = async (info) => {
-  //已有窗口则退出方法 防止内存损耗
-  if (strengthContext[info.url]) {
-    return
-  }
-  const Strength2Window = new BrowserWindow({
-    width: 1920,
-    height: 1080,
-    show: false,
-    useContentSize: true,
-    autoHideMenuBar: true,
-    resizable: false,
-    frame: false,
-    maximizable: false,
-    titleBarStyle: 'hidden',
-    transparent: true,
-    alwaysOnTop: true, // 可选，让窗口总在最前面显示
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
-  // 确保窗口加载完成后再执行传参
-  Strength2Window.webContents.on('did-finish-load', () => {
-    // 确保窗口加载完成后再执行
-    if (!strengthContext[info.url]) {
-      strengthContext[info.url] = Strength2Window
-      const windowToReceiveMessage = strengthContext[info.url]
-      if (!windowToReceiveMessage.isDestroyed()) {
-        setTimeout(() => {
-          windowToReceiveMessage.webContents.send('routerStrength', '/strength2', info)
-          Strength2Window.show()
-        }, 200)
-      }
-    }
-  })
-  // 关闭窗口清空窗口序列
-  Strength2Window.on('close', () => {
-    strengthContext[info.url] = null
-  })
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    await Strength2Window.loadURL(
-      process.env['ELECTRON_RENDERER_URL'] + '/#/strength2'
-    )
-  } else {
-    await Strength2Window.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-}
-
-ipcMain.handle('closeStrength', (_event, name) => {
-  if (strengthContext[name]) {
-    strengthContext[name].close()
-  }
-})
 ipcMain.handle('clear-all-data-and-cache', () => {
   session.defaultSession.clearCache()
   // // 清理用户数据文件夹（Node.js v12.10.0+）

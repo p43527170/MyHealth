@@ -32,7 +32,5 @@ export type AllReminderItems = CommonReminderItem | CustomReminderItem
 
 export interface Setting {
   powerOn: boolean
-  merge: boolean
-  floatingWindow: boolean
   automaticUpgrade: boolean
 }
