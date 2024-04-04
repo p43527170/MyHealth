@@ -39,19 +39,19 @@ const reminderSettings = {
     {
       title: '20-20-20 护眼法',
       text: '请向 20 英尺（6米）外眺望 20 秒',
-      time: 1
+      time: 20
     },
     {
       title: '一小时护眼法',
       text: '请闭眼或眺望远方 1 ~ 5 分钟',
-      time: 0.2
+      time: 60
     }
   ],
   jiuzuo: [
     {
       title: '一小时久坐提醒',
       text: '一小时啦，请起身活动 1 分钟',
-      time: 0.3
+      time: 60
     },
     {
       title: '两小时久坐提醒',
@@ -63,7 +63,7 @@ const reminderSettings = {
     {
       title: '半小时喝水提醒',
       text: '半小时啦，记得喝水',
-      time: 0.4
+      time: 30
     },
     {
       title: '一小时喝水提醒',
@@ -113,7 +113,6 @@ class Reminder {
   calculateNextExecution(): Date {
     const intervalInMinutes = this.info.time
     const now = new Date()
-    console.log('calculateNextExecution')
     return new Date(now.getTime() + intervalInMinutes * 60 * 1000)
   }
 
@@ -138,7 +137,7 @@ class Reminder {
             x: 10,
             y: 10
           },
-          '/strength1'
+          'strength1'
         )
         break
       case 2:
@@ -148,7 +147,7 @@ class Reminder {
             width: 1920,
             height: 1080
           },
-          '/strength2'
+          'strength2'
         )
         break
       default:
@@ -157,7 +156,6 @@ class Reminder {
     }
     // 重新调度提醒任务
     this.info = reminderSettings[this.url]?.[this.modeValue]
-    console.log(44444);
     this.rescheduleReminder(scheduler)
   }
   // 需要传递的提醒信息
@@ -172,7 +170,6 @@ class Reminder {
   }
   //重新调度提醒任务
   rescheduleReminder(scheduler: ReminderScheduler) {
-    console.log('00000');
     scheduler.scheduleReminder(this)
   }
 
@@ -245,7 +242,6 @@ class ReminderScheduler {
   //调度提醒任务
   scheduleReminder(reminder: Reminder) {
     this.cancelReminder(reminder.index)
-    console.log(1111);
     const job = schedule.scheduleJob(reminder.calculateNextExecution(), () => {
       reminder.executeReminder(this.notificationManager)
     })
@@ -272,7 +268,6 @@ class NotificationManager {
     playAudio: boolean,
     index: number
   ) {
-    console.log('streng0')
     const notification = new Notification({
       title: title,
       body: body,
@@ -339,7 +334,7 @@ class NotificationManager {
         strengthContext[info.url] = windowInstance
         if (!windowInstance.isDestroyed()) {
           setTimeout(() => {
-            windowInstance.webContents.send('routerStrength', routerPath, info)
+            windowInstance.webContents.send('routerStrength', info)
             this.palyVoice(info.voiceValue)
             windowInstance.show()
           }, 200)
@@ -347,19 +342,21 @@ class NotificationManager {
       }
     })
     windowInstance.on('close', () => {
-      console.log(routerPath)
       strengthContext[info.url] = null
       // 根据实际情况决定是否需要针对不同窗口类型调整 strengthContextNum
-      if (routerPath === '/strength1') {
+      if (routerPath === 'strength1') {
         this.strengthContextNum = this.strengthContextNum - 4
       }
     })
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
       await windowInstance.loadURL(
-        `${process.env['ELECTRON_RENDERER_URL']}/${routerPath}`
+        `${process.env['ELECTRON_RENDERER_URL']}/#/${routerPath}`
       )
     } else {
-      await windowInstance.loadFile(join(__dirname, '../renderer/index.html'))
+      await windowInstance.loadURL(
+        join(__dirname, '../renderer/index.html#' + routerPath)
+      )
+      // await windowInstance.loadFile(join(__dirname, '../renderer/index.html#strength1'))
     }
   }
 }

@@ -74,7 +74,7 @@ function createWindow(): void {
   })
   //启动执行系统设置
   ipcMain.handle('startWork', async () => {
-    console.log('startWork')
+    console.log('startSettingWork')
     const info = (await store.get('settingData')) as unknown as {
       automaticUpgrade: boolean
     }
@@ -87,6 +87,7 @@ function createWindow(): void {
   })
   //初始化App业务
   ipcMain.handle('startRemind', (_event, index) => {
+    console.log('newStrat111111');
     scheduler.startCustomIntervalTask(index)
   })
   //更新App业务

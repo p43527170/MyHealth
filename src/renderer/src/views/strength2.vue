@@ -12,9 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
-const route = useRoute()
+import { ref, onMounted, onUnmounted } from 'vue'
 import yanjing from '../image/yanjing.png'
 import jiuzuo from '../image/jiuzuo.png'
 import heshui from '../image/heshui.png'
@@ -28,30 +26,18 @@ const text = ref('') //提示文字
 const num = ref(20) //倒计时
 const index = ref(0) //提示索引
 const name = ref('') //提示名
-watch(
-  () =>
-    route.query as {
-      url: string
-      title: string
-      modeValue: string
-      index: string
-    },
-  (newValue) => {
-    if (Object.keys(newValue).length) {
-      const info = reminderSettings[newValue.url] //提示信息
-      const modeValue = parseInt(newValue.modeValue)
-      selectImage.value = images[newValue.index]
-      index.value = parseInt(newValue.index)
-      text.value = info[modeValue].text
-      num.value = info[modeValue].time
-      name.value = newValue.url
-      title.value = newValue.title
-      console.log(title.value)
-    }
-  },
-  { immediate: true }
-)
-
+window.electron.ipcRenderer.on('routerStrength', (_event, newValue) => {
+  console.log(newValue);
+  const info = reminderSettings[newValue.url] //提示信息
+  const modeValue = parseInt(newValue.modeValue)
+  selectImage.value = images[newValue.index]
+  index.value = parseInt(newValue.index)
+  text.value = info[modeValue].text
+  num.value = info[modeValue].time
+  name.value = newValue.url
+  title.value = newValue.title
+  console.log(title.value)
+})
 const close = () => {
   window.electron.ipcRenderer.invoke('closeStrength', name.value)
 }
