@@ -9,7 +9,7 @@ const defaultSetting: AllReminderItems[] = [
     other: false,
     modeValue: 0,
     voiceValue: false,
-    strengthValue: 1
+    strengthValue: 0
   },
   {
     title: '久坐提醒',
@@ -17,8 +17,8 @@ const defaultSetting: AllReminderItems[] = [
     switch: true,
     other: false,
     modeValue: 0,
-    voiceValue: false,
-    strengthValue: 0
+    voiceValue: true,
+    strengthValue: 1
   },
   {
     title: '喝水提醒',

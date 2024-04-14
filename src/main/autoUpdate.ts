@@ -1,6 +1,8 @@
 import { autoUpdater } from 'electron-updater'
 import { dialog, Notification } from 'electron'
-export function handleUpdate(flag: boolean) {
+export function handleUpdate(flag: boolean, message: boolean) {
+  // 移除所有监听事件
+  autoUpdater.removeAllListeners()
   // 开启开发环境下的更新检查
   // autoUpdater.forceDevUpdateConfig = true
   // 或者允许预发布版本更新
@@ -25,36 +27,38 @@ export function handleUpdate(flag: boolean) {
       }
     })
   }
-  // 监听无可用更新事件
-  // autoUpdater.on('update-not-available', function (message) {
-  //   console.log(message)
-  //   sendUpdateMessage({
-  //     cmd: 'info',
-  //     message: '无更新'
-  //   })
-  // })
-  // let loading = true
+  if (message) {
+    // 监听无可用更新事件
+    autoUpdater.on('update-not-available', function () {
+      const notification = new Notification({
+        title: '无可用更新',
+        body: '当前版本已是最新版'
+      })
+      notification.show()
+    })
+  }
+  let loading = false
   // 监听升级失败事件
-  // if (loading) {
-  //   autoUpdater.on('error', function (error) {
-  //     console.log(error)
-  //     sendUpdateMessage({
-  //       cmd: 'error',
-  //       message: '网络错误升级失败，是否重试'
-  //     })
-  //   })
-  // }
+  if (loading) {
+    autoUpdater.on('error', function (error) {
+      console.log(error)
+      sendUpdateMessage({
+        cmd: 'error',
+        message: '网络错误升级失败，是否重试'
+      })
+    })
+  }
   // 更新下载进度事件 有空做个进度条
-  // autoUpdater.on('download-progress', function (progressObj) {
-  //   console.log(progressObj.percent)
-  //   loading = true
-  // })
+  autoUpdater.on('download-progress', function () {
+    loading = true
+  })
   //监听下载完成事件
   autoUpdater.on('update-downloaded', function (releaseNotes) {
     const notification = new Notification({
       title: releaseNotes.version + ' 下载完毕',
       body: '开始运行更新程序'
     })
+    loading = false
     notification.show()
     //退出并安装更新包
     autoUpdater.quitAndInstall()

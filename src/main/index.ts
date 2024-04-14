@@ -78,7 +78,7 @@ function createWindow(): void {
     const info = (await store.get('settingData')) as unknown as {
       automaticUpgrade: boolean
     }
-    handleUpdate(info.automaticUpgrade)
+    handleUpdate(info.automaticUpgrade, false)
     systemWork(info)
   })
   //更新系统设置业务
@@ -87,7 +87,6 @@ function createWindow(): void {
   })
   //初始化App业务
   ipcMain.handle('startRemind', (_event, index) => {
-    console.log('newStrat111111');
     scheduler.startCustomIntervalTask(index)
   })
   //更新App业务
@@ -138,7 +137,7 @@ app.whenReady().then(() => {
     {
       label: '检查更新',
       click: () => {
-        handleUpdate(false)
+        handleUpdate(false, true)
       }
     },
     { label: '显示/隐藏窗口', click: () => toggleMainWindow() },

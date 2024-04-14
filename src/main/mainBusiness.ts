@@ -92,6 +92,7 @@ export interface StrengthWindowOptions {
   height: number
   x?: number
   y?: number
+  fullscreen?: boolean
 }
 // Reminder类，负责提醒的相关信息和方法
 class Reminder {
@@ -144,8 +145,9 @@ class Reminder {
         notificationManager.createStrengthWindow(
           this.getInfo(),
           {
-            width: 1920,
-            height: 1080
+            width: 600,
+            height: 600,
+            fullscreen: true
           },
           'strength2'
         )
@@ -321,7 +323,7 @@ class NotificationManager {
       frame: false,
       maximizable: false,
       transparent: true,
-      alwaysOnTop: true,
+      // alwaysOnTop: false,
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         sandbox: false
