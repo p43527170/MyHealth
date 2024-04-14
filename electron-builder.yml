@@ -46,5 +46,6 @@ publish:
   owner: p43527170
   repo: MyHealth
   releaseType: release # 可选，发布类型（如 draft, prerelease, release）
+  key: GH_TOKEN
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
